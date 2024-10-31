@@ -19,7 +19,7 @@ def main(page: ft.Page) -> None:
     def upload_files(e) -> None:
         
         for name, path in sel_files.items(): # Перебираем все выбранные файлы
-            shutil.copy(path, f"GUI/{name}") # Сохраняем каждый файл в директорию проекта
+            shutil.copy(path, f"GUI/{name}") # Копируем каждый файл в директорию проекта
             
     # Настройки окна программы
     page.title = 'Arima'
@@ -39,11 +39,6 @@ def main(page: ft.Page) -> None:
     sel_files = dict()
     
     # Колонка с именами выбранных файлов
-    '''sel_files_names = ft.Column(
-        scroll=ft.ScrollMode.ALWAYS,
-        width=400,
-        height=80,
-    )'''
     sel_files_names = ft.Card(
         color=ft.colors.INDIGO_700,
         content=ft.Column(
@@ -62,11 +57,13 @@ def main(page: ft.Page) -> None:
 
     # Кнопка 'Выберите файлы'
     btn_pick_files = ft.ElevatedButton(
+        text=None,
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
         content=txt_btn_pick_files,
         width=400,
         height=80,
         bgcolor=ft.colors.INDIGO_700,
-        on_click=lambda _: file_picker.pick_files(allow_multiple=True)
+        on_click=lambda _: file_picker.pick_files(allow_multiple=True),
     )
 
     # Текст для кнопки 'Загрузить файлы'
@@ -78,21 +75,35 @@ def main(page: ft.Page) -> None:
 
     # Кнопка 'Загрузить файлы'
     btn_upload_files = ft.ElevatedButton(
+        text=None,
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
         content=txt_btn_upload_files,
         width=400,
         height=80,
         bgcolor=ft.colors.INDIGO_700,
         on_click=upload_files
+        
+    )
+
+    # Текст с названием программы
+    txt_label = ft.Text(
+        value='ARIMA',
+        color=ft.colors.WHITE,
+        size=100,
+        width=400,
+        text_align=ft.TextAlign.CENTER
     )
 
     # Отображаем все созданные объекты
     page.add(
         ft.Column(
             [
+                txt_label,
                 btn_pick_files,
                 sel_files_names,
                 btn_upload_files
-            ]
+            ], 
+            spacing=20
         )
     )
 
