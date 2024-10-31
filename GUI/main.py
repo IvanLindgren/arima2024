@@ -1,16 +1,29 @@
 import flet as ft # Фреймворк Flet для создания графического интерфейса программы
-import shutil # Для работы с с файлами и директориями
-
+import shutil # Для работы с с файлами 
+from pathlib import Path # Для работы с файлами
 
 def main(page: ft.Page) -> None:
     
     # Выбор нужных файлов
     def pick_files(e: ft.FilePickerResultEvent) -> None:
+        
         if file_picker.result and file_picker.result.files: # Если диалоговое окно закрыто и был выбран хотя бы 1 файл
             
+            extensions = ['.csv', '.xlsx', '.xlsm', '.xls'] # Допустимые расширения
+            
             for file in file_picker.result.files: # Перебираем все выбранные файлы
-                if file.name not in sel_files: # Если файла с таким именем нет в хеш-таблице
-                    sel_files_names.content.controls.append(ft.Text(file.name, size=12, color=ft.colors.WHITE)) # Выводим имя файла на экран
+                if file.name not in sel_files and Path(file.name).suffix in extensions: # Если файла с таким именем нет в хеш-таблице
+                    
+                    sel_files_names.content.controls.append( # Выводим имя файла на экран
+                        ft.Text(
+                            file.name,
+                            size=20,
+                            color=ft.colors.WHITE,
+                            text_align=ft.TextAlign.CENTER,
+                            width=400
+                        )
+                    )
+                    
                     sel_files[file.name] = file.path  # Добавляем файлы в хеш - таблицу
             
             sel_files_names.update() # Обновляем список на экране
@@ -42,20 +55,21 @@ def main(page: ft.Page) -> None:
     sel_files_names = ft.Card(
         color=ft.colors.INDIGO_700,
         content=ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
             scroll=ft.ScrollMode.ALWAYS,
             width=400,
             height=80,
         )
     )
     
-    # Текст для кнопки 'Выберите файлы'
+    # Текст для кнопки 'Выбрать файлы'
     txt_btn_pick_files = ft.Text(
-        value='Выберите файлы',
-        size=20,
+        value='Выбрать файлы',
+        size=30,
         color=ft.colors.WHITE,
     )
 
-    # Кнопка 'Выберите файлы'
+    # Кнопка 'Выбрать файлы'
     btn_pick_files = ft.ElevatedButton(
         text=None,
         style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
@@ -69,7 +83,7 @@ def main(page: ft.Page) -> None:
     # Текст для кнопки 'Загрузить файлы'
     txt_btn_upload_files = ft.Text(
         value='Загрузить файлы',
-        size=20,
+        size=30,
         color=ft.colors.WHITE,
     )
 
