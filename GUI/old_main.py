@@ -47,6 +47,7 @@ def main(page: ft.Page) -> None:
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.on_route_change = route_change
     
+   
     
     
     # Объект для обработки загрузки файла

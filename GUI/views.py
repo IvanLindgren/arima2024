@@ -7,8 +7,10 @@ def views_handler(page) -> dict:
         '/':ft.View(
                 route='/',
                 controls=[
-                    Home(page)
-                ]
+                    Home(page).build()
+                ],
+                bgcolor=ft.colors.INDIGO_900,
+                
             ),
         '/kran_15':ft.View(
                 route='/kran_15',

@@ -4,7 +4,7 @@ from Buttons import Button
 from pathlib import Path 
 
 
-class Home(ft.UserControl):
+class Home(ft.Column):
     def __init__(self, page) -> None:
         super().__init__()
         self.page = page
@@ -44,6 +44,8 @@ class Home(ft.UserControl):
         self.page.bgcolor = ft.colors.INDIGO_900
         self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        self.page.window_min_width, self.page.window_max_width = 1000, 1000
+        self.page.window_min_height, self.page.window_max_height = 700, 700
         
         
         # Объект для обработки загрузки файла
@@ -86,7 +88,8 @@ class Home(ft.UserControl):
         btn_Scaner.on_click = lambda _: self.page.go('/scaner')
 
         # Отображаем все созданные объекты
-        return ft.Column(
+        return ft.Container(
+            ft.Column(
                 [
                     txt_label,
                     ft.Row([btn_Kran_15, btn_Balka], spacing=10, alignment=ft.MainAxisAlignment.CENTER),
@@ -94,5 +97,11 @@ class Home(ft.UserControl):
                     btn_info
                 ], 
                 spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
-            )
+            ),
+            width=1000,
+            height=700,
+            bgcolor=ft.colors.INDIGO_900
+        )
+        
+        
         
