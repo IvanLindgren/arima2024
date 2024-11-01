@@ -1,6 +1,8 @@
 import flet as ft # Фреймворк Flet для создания графического интерфейса программы
 import shutil # Для работы с с файлами 
 from pathlib import Path # Для работы с файлами
+from Buttons import Button # Импортируем созданный класс для кнопок
+from views import views_handler
 
 def main(page: ft.Page) -> None:
     
@@ -11,10 +13,11 @@ def main(page: ft.Page) -> None:
             
             extensions = ['.csv', '.xlsx', '.xlsm', '.xls'] # Допустимые расширения
             
-            for file in file_picker.result.files: # Перебираем все выбранные файлы
-                if file.name not in sel_files and Path(file.name).suffix in extensions: # Если файла с таким именем нет в хеш-таблице
-                    
-                    sel_files_names.content.controls.append( # Выводим имя файла на экран
+            for file in file_picker.result.files:
+                # Если файла с таким именем нет в хеш-таблице и у него допустимое расширение
+                if file.name not in sel_files and Path(file.name).suffix in extensions: 
+                    # Выводим имя файла на экран                                                                
+                    sel_files_names.content.controls.append( 
                         ft.Text(
                             file.name,
                             size=20,
@@ -28,12 +31,12 @@ def main(page: ft.Page) -> None:
             
             sel_files_names.update() # Обновляем список на экране
 
-    # Загрузка выбранных файлов в директорию проекта
-    def upload_files(e) -> None:
-        
-        for name, path in sel_files.items(): # Перебираем все выбранные файлы
-            shutil.copy(path, f"GUI/{name}") # Копируем каждый файл в директорию проекта
-            
+    def route_change(route) -> None:
+        page.views.clear()
+        page.views.append(
+           views_handler(page)
+        )
+
     # Настройки окна программы
     page.title = 'Arima'
     page.window.width = 1000
@@ -42,7 +45,9 @@ def main(page: ft.Page) -> None:
     page.bgcolor = ft.colors.INDIGO_900
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.update()
+    page.on_route_change = route_change
+    
+    
     
     # Объект для обработки загрузки файла
     file_picker = ft.FilePicker(on_result=pick_files)
@@ -62,62 +67,34 @@ def main(page: ft.Page) -> None:
         )
     )
     
-    # Текст для кнопки 'Выбрать файлы'
-    txt_btn_pick_files = ft.Text(
-        value='Выбрать файлы',
-        size=30,
-        color=ft.colors.WHITE,
-    )
-
-    # Кнопка 'Выбрать файлы'
-    btn_pick_files = ft.ElevatedButton(
-        text=None,
-        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-        content=txt_btn_pick_files,
-        width=400,
-        height=80,
-        bgcolor=ft.colors.INDIGO_700,
-        on_click=lambda _: file_picker.pick_files(allow_multiple=True),
-    )
-
-    # Текст для кнопки 'Загрузить файлы'
-    txt_btn_upload_files = ft.Text(
-        value='Загрузить файлы',
-        size=30,
-        color=ft.colors.WHITE,
-    )
-
-    # Кнопка 'Загрузить файлы'
-    btn_upload_files = ft.ElevatedButton(
-        text=None,
-        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-        content=txt_btn_upload_files,
-        width=400,
-        height=80,
-        bgcolor=ft.colors.INDIGO_700,
-        on_click=upload_files
-        
-    )
-
     # Текст с названием программы
     txt_label = ft.Text(
         value='ARIMA',
         color=ft.colors.WHITE,
         size=100,
-        width=400,
+        width=810,
         text_align=ft.TextAlign.CENTER
     )
+
+    # Создание кнопок для главной страницы
+    btn_Kran_15 = Button(val='Кран 15', page=page).create_btn()
+    btn_Kran_17 = Button(val='Кран 17', page=page).create_btn()
+    btn_Balka = Button(val='Балка', page=page).create_btn()
+    btn_Scaner= Button(val='Сканер', page=page).create_btn()
+    btn_info = Button(val='Информация', page=page, width=810).create_btn()
+
+    btn_Kran_15.on_click = lambda _: page.go('/kran_17')
 
     # Отображаем все созданные объекты
     page.add(
         ft.Column(
             [
                 txt_label,
-                btn_pick_files,
-                sel_files_names,
-                btn_upload_files
+                ft.Row([btn_Kran_15, btn_Balka], spacing=10, alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row([btn_Kran_17, btn_Scaner], spacing=10, alignment=ft.MainAxisAlignment.CENTER),
+                btn_info
             ], 
-            spacing=20
+            spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
     )
 
