@@ -31,13 +31,8 @@ def main(page: ft.Page) -> None:
             
             sel_files_names.update() # Обновляем список на экране
 
-    def route_change(route) -> None:
-        page.views.clear()
-        page.views.append(
-           views_handler(page)
-        )
-
     # Настройки окна программы
+    
     page.title = 'Arima'
     page.window.width = 1000
     page.window.height = 700
@@ -45,10 +40,6 @@ def main(page: ft.Page) -> None:
     page.bgcolor = ft.colors.INDIGO_900
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.on_route_change = route_change
-    
-   
-    
     
     # Объект для обработки загрузки файла
     file_picker = ft.FilePicker(on_result=pick_files)
@@ -83,9 +74,21 @@ def main(page: ft.Page) -> None:
     btn_Balka = Button(val='Балка', page=page).create_btn()
     btn_Scaner= Button(val='Сканер', page=page).create_btn()
     btn_info = Button(val='Информация', page=page, width=810).create_btn()
-
-    btn_Kran_15.on_click = lambda _: page.go('/kran_17')
-
+    #btn_pick_files = Button(val='Выберите файл', page=page).create_btn()
+    #btn_pick_files.on_click = pick_files
+    
+    def f(e):
+        btn_pick_files.text = 'sosi'
+        btn_pick_files.update()
+    
+    btn_pick_files = ft.ElevatedButton(
+        width=400,
+        height=80,
+        color=ft.colors.INDIGO_900,
+        text='Выберите файл',
+        on_click=pick_files
+    )
+    
     # Отображаем все созданные объекты
     page.add(
         ft.Column(
@@ -93,7 +96,9 @@ def main(page: ft.Page) -> None:
                 txt_label,
                 ft.Row([btn_Kran_15, btn_Balka], spacing=10, alignment=ft.MainAxisAlignment.CENTER),
                 ft.Row([btn_Kran_17, btn_Scaner], spacing=10, alignment=ft.MainAxisAlignment.CENTER),
-                btn_info
+                btn_info,
+                btn_pick_files,
+                sel_files_names
             ], 
             spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
