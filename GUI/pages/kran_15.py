@@ -1,4 +1,5 @@
 import flet as ft
+import time
 from Buttons import Button
 from pathlib import Path 
 
@@ -18,6 +19,42 @@ class Kran_15(ft.Container):
                 
                 for file in file_picker.result.files:
                     # Если файла с таким именем нет в хеш-таблице и у него допустимое расширение
+                    if file.name in sel_files:
+                        tmp = sel_files_names.content
+                        
+                        sel_files_names.content = ft.Text(
+                            value='Файл уже добавлен',
+                            size=20,
+                            width=400,
+                            height=80,
+                            text_align=ft.TextAlign.CENTER,
+                            color=ft.colors.RED
+                        )
+                        
+                        sel_files_names.update()
+                        time.sleep(2)
+                        
+                        sel_files_names.content = tmp
+                        sel_files_names.update()
+
+                    elif Path(file.name).suffix not in extensions:
+                        tmp = sel_files_names.content
+                        
+                        sel_files_names.content = ft.Text(
+                            value='Некорректный формат',
+                            size=20,
+                            width=400,
+                            height=80,
+                            text_align=ft.TextAlign.CENTER,
+                            color=ft.colors.RED
+                        )
+                        
+                        sel_files_names.update()
+                        time.sleep(2)
+                        
+                        sel_files_names.content = tmp
+                        sel_files_names.update()
+                    
                     if file.name not in sel_files and Path(file.name).suffix in extensions: 
                         # Выводим имя файла на экран                                                                
                         sel_files_names.content.controls.append( 
@@ -35,14 +72,14 @@ class Kran_15(ft.Container):
                 sel_files_names.update() # Обновляем список на экране
 
         # Настройки окна программы
-        self.page.window.width = 1000
+        '''self.page.window.width = 1000
         self.page.window.height = 700
         self.page.window.resizable = False
         self.page.bgcolor = ft.colors.INDIGO_900
         self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page.window_min_width, self.page.window_max_width = 1000, 1000
-        self.page.window_min_height, self.page.window_max_height = 700, 700
+        self.page.window_min_height, self.page.window_max_height = 700, 700'''
         
         # Объект для обработки загрузки файла
         file_picker = ft.FilePicker(on_result=pick_files)

@@ -24,7 +24,7 @@ class Button:
                                 width=self.width,
                                 bgcolor=ft.colors.INDIGO_700,
                                 height=80,
-                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
+                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
         )
         
         return btn
