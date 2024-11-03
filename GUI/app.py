@@ -1,28 +1,25 @@
 import flet as ft
-from views import views_handler
-from flet_navigator import PageData, render, anon, route
+from flet_navigator import *
+from pages.home import home
+from pages.kran_15 import kran_15
+from pages.kran_17 import kran_17
+from pages.balka import balka
+from pages.scaner import scaner
 
 
 def main(page: ft.Page) -> None:
+    navigator = VirtualFletNavigator(
+       routes={
+           '/': home,
+           '/kran_15': kran_15,
+           '/kran_17': kran_17,
+           '/balka': balka,
+           '/scaner': scaner
+       },
+       navigator_animation=NavigatorAnimation(NavigatorAnimation.FADE)
+    )
     
-    def route_change(route) -> None:
-        page.views.clear()
-        page.views.append(
-           views_handler(page)[page.route]
-        )
-        page.update()
-
-    page.title = 'Arima'
-    page.window.width = 1000
-    page.window.height = 700
-    page.window.resizable = False
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.window.min_width, page.window.max_width = 1000, 1000
-    page.window.min_height, page.window.max_height = 700, 700
-    
-    page.on_route_change = route_change
-    page.go('/')
+    navigator.render(page)
     
     
 if __name__ == '__main__':

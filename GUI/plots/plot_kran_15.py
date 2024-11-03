@@ -1,5 +1,5 @@
 import flet as ft
-from Buttons import Button
+from GUI.utils.Buttons import Button
 
 
 class Home(ft.Column):
