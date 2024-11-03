@@ -14,8 +14,8 @@ def home(pg:PageData) -> None:
     pg.page.bgcolor = ft.colors.INDIGO_900
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    pg.page.window_min_width, pg.page.window_max_width = 1000, 1000
-    pg.page.window_min_height, pg.page.window_max_height = 700, 700
+    pg.page.window.min_width, pg.page.window.max_width = 1000, 1000
+    pg.page.window.min_height, pg.page.window.max_height = 700, 700
     
     # Текст с названием программы
     txt_label = ft.Text(

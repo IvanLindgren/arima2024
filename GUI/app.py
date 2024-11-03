@@ -1,10 +1,13 @@
 import flet as ft
+import matplotlib
 from flet_navigator import *
 from pages.home import home
 from pages.kran_15 import kran_15
 from pages.kran_17 import kran_17
 from pages.balka import balka
 from pages.scaner import scaner
+from plots.plot_kran_15 import plot_kran_15
+matplotlib.use("svg")
 
 
 def main(page: ft.Page) -> None:
@@ -14,9 +17,10 @@ def main(page: ft.Page) -> None:
            '/kran_15': kran_15,
            '/kran_17': kran_17,
            '/balka': balka,
-           '/scaner': scaner
+           '/scaner': scaner,
+           '/plot_kran_15': plot_kran_15
        },
-       navigator_animation=NavigatorAnimation(NavigatorAnimation.FADE)
+       navigator_animation=NavigatorAnimation(NavigatorAnimation.SMOOTHNESS_10)
     )
     
     navigator.render(page)
