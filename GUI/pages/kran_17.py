@@ -74,7 +74,7 @@ def kran_17(pg: PageData) -> None:
     btn_pick_files = Button(val='Выбрать файл', page=pg.page).create_btn()
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
     btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
-    btn_calculate.on_click = None
+    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_17', page=pg.page)
     # Отображаем все созданные объекты
     pg.page.add(
         ft.Column(

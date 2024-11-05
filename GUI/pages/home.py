@@ -23,7 +23,8 @@ def home(pg:PageData) -> None:
         color=ft.colors.WHITE,
         size=100,
         width=810,
-        text_align=ft.TextAlign.CENTER
+        text_align=ft.TextAlign.CENTER,
+        weight=ft.FontWeight.W_700
     )
 
     # Создание кнопок для главной страницы

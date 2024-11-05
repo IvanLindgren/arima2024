@@ -106,6 +106,8 @@ def kran_15(pg: PageData) -> None:
         text_align=ft.TextAlign.CENTER
     )
 
+    #pg.navigator.navigator_animation = NavigatorAnimation(NavigatorAnimation.FADE)
+    
     # Создание кнопок для главной страницы
     btn_go_home = Button(val='На главную', page=pg.page).create_btn()
     btn_calculate = Button(val='Произвести расчет', page=pg.page).create_btn()

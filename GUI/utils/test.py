@@ -1,46 +1,74 @@
-import flet as ft
-from flet_navigator import *
+from flet import app, Page, Text, FilledButton, TextThemeStyle
+
+from flet_navigator import FletNavigator, Any, ROUTE_404
+
+from random import randint
 
 
-@route('/')
-def home(pg: PageData) -> None:
-    pg.page.title = 'Home page'
-    pg.page.window.width = 600
-    pg.page.window.height = 300
-    pg.page.bgcolor = ft.colors.DEEP_PURPLE_700
-    
-    pg.page.add(
-        ft.ElevatedButton(
-            text='Go page 2',
-            on_click=lambda _: pg.navigator.navigate('/page2', page=pg.page),
-            color=ft.colors.DEEP_PURPLE_300
-        )
-    )
+# Main page content.
+# page - Current page,
+# navigator - With this you can navigate to other pages,
+# args - Arguments sent from other page.
+# Using these all typehints is optional.
+def main_page(page: Page, navigator: FletNavigator, args: tuple[Any]) -> None:
+   page.add(Text('Main Page!', style=TextThemeStyle.DISPLAY_MEDIUM))
 
+   if args:
+      page.add(Text(f'Message from {args[0]}: {args[1]}.'))
 
-@route('/page2')
-def page2(pg: PageData) -> None:
-    pg.page.title = 'Page 2'
-    pg.page.window.width = 600
-    pg.page.window.height = 400
-    pg.page.bgcolor = ft.colors.BLUE_GREY_900
-    
-    pg.page.add(
-        ft.ElevatedButton(
-            text='Go home',
-            on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-        )
-    )
+   page.add(
+      FilledButton(
+            'Navigate to second page!',
 
-
-def main(page: ft.Page) -> None:
-   navigator = VirtualFletNavigator(
-       routes={'/': home, '/page2': page2},
-       navigator_animation=NavigatorAnimation(NavigatorAnimation.SCALE)
+            on_click=lambda _: navigator.navigate('second_page', page, ('main page', 'Hello from main page!')) # Navigate to 'second_page', and send greetings from main page as arguments!
+      )
    )
-   
-   navigator.render(page)
 
+   page.add(
+      FilledButton(
+            'Navigate to really_non_existent_page!',
 
-if __name__ == '__main__':
-    ft.app(target=main)
+            on_click=lambda _: navigator.navigate('really_non_existent_page', page) # Navigate to non-existent page. Will result route_404.
+      )
+   )
+
+# Second page content.
+def second_page(page: Page, navigator: FletNavigator, args: tuple[Any]) -> None:
+   page.add(Text('Second Page!', style=TextThemeStyle.DISPLAY_SMALL))
+
+   page.add(Text(f'Message from {args[0]}: {args[1]}'))
+
+   page.add(
+      FilledButton(
+            'Navigate to main page!',
+
+            on_click=lambda _: navigator.navigate('/', page, ('second page', randint(1, 100))) # Navigate to main page, and send random number as arguments!
+      )
+   )
+
+# 404 page content.
+def route_404(page: Page, navigator: FletNavigator, args: tuple[Any]) -> None:
+   page.add(Text('How did you get here? There is no page like this registered in routes...'))
+
+   page.add(
+      FilledButton(
+            'Navigate to the main page until it is too late...',
+
+            on_click=lambda _: navigator.navigate('/', page) # Navigate to main page.
+      )
+   )
+
+# Main function. Being used only for routing.
+def main(page: Page) -> None:
+   # Initialize navigator.
+   flet_navigator = FletNavigator(
+      {
+            '/': main_page, # Specify main page,
+            'second_page': second_page, # Specify second page,
+            ROUTE_404: route_404 # Specify 404 page (optional).
+      }, lambda route: print(f'Route changed!: {route}') # On route changed handler (optional).
+   )
+
+   flet_navigator.render(page) # Render main page.
+
+app(target=main) # Run main fuction.
