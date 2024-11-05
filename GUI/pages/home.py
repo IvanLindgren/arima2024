@@ -6,7 +6,7 @@ from flet_navigator import *
 @route('/')
 def home(pg:PageData) -> None:
         
-    # Настройки окна программы
+    # Настройки страницы
     pg.page.title = 'Arima'
     pg.page.window.width = 1000
     pg.page.window.height = 700
@@ -17,7 +17,7 @@ def home(pg:PageData) -> None:
     pg.page.window.min_width, pg.page.window.max_width = 1000, 1000
     pg.page.window.min_height, pg.page.window.max_height = 700, 700
     
-    # Текст с названием программы
+    # Заголовок страницы
     txt_label = ft.Text(
         value='ARIMA',
         color=ft.colors.WHITE,
@@ -34,11 +34,14 @@ def home(pg:PageData) -> None:
     btn_Scaner= Button(val='Сканер', page=pg.page).create_btn()
     btn_info = Button(val='Информация', page=pg.page, width=810).create_btn()
 
+    # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
     btn_Kran_15.on_click = lambda _: pg.navigator.navigate('/kran_15', page=pg.page)
     btn_Kran_17.on_click = lambda _: pg.navigator.navigate('/kran_17', page=pg.page)
     btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
     btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
+    btn_info.on_click = None
 
+    # Добавляем все созданные объекты на страницу
     pg.page.add(
         ft.Container(
             ft.Column(

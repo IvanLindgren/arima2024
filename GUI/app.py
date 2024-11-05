@@ -9,6 +9,8 @@ from pages.balka import balka
 from pages.scaner import scaner
 from plots.plot_kran_15 import plot_kran_15
 from plots.plot_kran_17 import plot_kran_17
+from plots.plot_balka import plot_balka
+from plots.plot_scaner import plot_scaner
 matplotlib.use("svg")
 warnings.filterwarnings('ignore')
 
@@ -22,10 +24,11 @@ def main(page: ft.Page) -> None:
            '/balka': balka,
            '/scaner': scaner,
            '/plot_kran_15': plot_kran_15,
-           '/plot_kran_17': plot_kran_17
-       },
-       navigator_animation=NavigatorAnimation(NavigatorAnimation.FADE)
-       
+           '/plot_kran_17': plot_kran_17,
+           '/plot_balka': plot_balka,
+           '/plot_scaner': plot_scaner
+        },
+        navigator_animation=NavigatorAnimation(NavigatorAnimation.FADE)
     )
     
     navigator.render(page)

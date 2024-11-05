@@ -1,58 +1,75 @@
 import flet as ft
-import time
+import time 
 from utils.Buttons import Button
 from pathlib import Path 
 from flet_navigator import *
 
 
-
 @route('/kran_15')
 def kran_15(pg: PageData) -> None:
-            
+    
+    # Обработка ошибок (файлы дубликаты, некорректный формат файла)
+    def error_handler(bad_files: set[str], duplicates: set[str]) -> None:
+        # Временная переменаая, которая содержит список всех валидных файлов
+        tmp = sel_files_names.content.controls.copy()
+        
+        # Перебираем все файлы с некорректным расширением
+        for name in bad_files:
+            # Временно сохраняем в списке название файла и причину ошибки
+            sel_files_names.content.controls.append(
+                ft.Text(
+                        value=f"{name} - Некорректный файл",
+                        size=20,
+                        color=ft.colors.RED,
+                        text_align=ft.TextAlign.CENTER,
+                        width=400,
+                        italic=True
+                )
+            )
+
+        # Перебираем все файлы дубликаты
+        for name in duplicates:
+            # Временно сохраняем в списке название файла и причину ошибки
+            sel_files_names.content.controls.append(
+                ft.Text(
+                        value=f"{name} - Уже добавлен",
+                        size=20,
+                        color=ft.colors.RED,
+                        text_align=ft.TextAlign.CENTER,
+                        width=400,
+                        italic=True
+                )
+            )  
+        
+        # Выводим информацию о всех файлах на экран
+        sel_files_names.update()
+        time.sleep(2)
+        
+        # Спустя 2 секунду оставляем на экране список, состоящий только из валидных файлов
+        sel_files_names.content.controls = tmp
+        sel_files_names.update()
+    
+    # Выбор файла/файлов
     def pick_files(e: ft.FilePickerResultEvent) -> None:
-        if file_picker.result and file_picker.result.files: # Если диалоговое окно закрыто и был выбран хотя бы 1 файл
+        # Если диалоговое окно закрыто и был выбран хотя бы 1 файл
+        if file_picker.result and file_picker.result.files:
             
             extensions = ['.csv', '.xlsx', '.xlsm', '.xls'] # Допустимые расширения
             
+            bad_files = set() # Множество, в котором будут хранится файлы с некорректным расширением
+            duplicates = set() # Множество, в котором будут хранится файлы дубликаты
+            
+            # Перебираем все выбранные файлы
             for file in file_picker.result.files:
-                # Если файла с таким именем нет в хеш-таблице и у него допустимое расширение
+                # Если файл является дубликатом, добавляем его имя в соответствующее множество
                 if file.name in sel_files:
-                    tmp = sel_files_names.content
-                    
-                    sel_files_names.content = ft.Text(
-                        value='Файл уже добавлен',
-                        size=20,
-                        width=400,
-                        height=80,
-                        text_align=ft.TextAlign.CENTER,
-                        color=ft.colors.RED
-                    )
-                    
-                    sel_files_names.update()
-                    time.sleep(2)
-                    
-                    sel_files_names.content = tmp
-                    sel_files_names.update()
-
-                elif Path(file.name).suffix not in extensions:
-                    tmp = sel_files_names.content
-                    
-                    sel_files_names.content = ft.Text(
-                        value='Некорректный формат',
-                        size=20,
-                        width=400,
-                        height=80,
-                        text_align=ft.TextAlign.CENTER,
-                        color=ft.colors.RED
-                    )
-                    
-                    sel_files_names.update()
-                    time.sleep(2)
-                    
-                    sel_files_names.content = tmp
-                    sel_files_names.update()
+                    duplicates.add(file.name)
                 
-                if file.name not in sel_files and Path(file.name).suffix in extensions: 
+                # Если файл имеет некорректное расширение, добавляем его имя в соответствующее множество
+                elif Path(file.name).suffix not in extensions:
+                    bad_files.add(file.name)
+                
+                else: 
                     # Выводим имя файла на экран                                                                
                     sel_files_names.content.controls.append( 
                         ft.Text(
@@ -66,9 +83,13 @@ def kran_15(pg: PageData) -> None:
                     
                     sel_files[file.name] = file.path  # Добавляем файлы в хеш - таблицу
             
+            # Если хотя бы одно множество не пустое, запускаем обработку ошибок
+            if duplicates or bad_files:
+                error_handler(bad_files=bad_files, duplicates=duplicates)
+
             sel_files_names.update() # Обновляем список на экране
 
-    # Настройки окна программы
+    # Настройки страницы
     pg.page.title = 'Kran_15'
     pg.page.window.width = 1000
     pg.page.window.height = 700
@@ -79,7 +100,7 @@ def kran_15(pg: PageData) -> None:
     pg.page.window.min_width, pg.page.window.max_width = 1000, 1000
     pg.page.window.min_height, pg.page.window.max_height = 700, 700
     
-    # Объект для обработки загрузки файла
+    # Объект для обработки выбора файла/файлов
     file_picker = ft.FilePicker(on_result=pick_files)
     pg.page.overlay.append(file_picker)
     
@@ -94,29 +115,31 @@ def kran_15(pg: PageData) -> None:
             scroll=ft.ScrollMode.ALWAYS,
             width=400,
             height=80,
-        )
+        ),
+        shape=ft.RoundedRectangleBorder(radius=20)
     )
     
-    # Текст с названием программы
+    # Заголовок страницы
     txt_label = ft.Text(
         value='Кран 15',
         color=ft.colors.WHITE,
         size=70,
         width=810,
-        text_align=ft.TextAlign.CENTER
+        text_align=ft.TextAlign.CENTER,
+        weight=ft.FontWeight.W_700
     )
 
-    #pg.navigator.navigator_animation = NavigatorAnimation(NavigatorAnimation.FADE)
-    
     # Создание кнопок для главной страницы
     btn_go_home = Button(val='На главную', page=pg.page).create_btn()
     btn_calculate = Button(val='Произвести расчет', page=pg.page).create_btn()
     btn_pick_files = Button(val='Выбрать файл', page=pg.page).create_btn()
     
+    # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
     btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
     btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_15', page=pg.page)
-    # Отображаем все созданные объекты
+   
+    # Добавляем все созданные объекты на страницу
     pg.page.add(
         ft.Column(
             [

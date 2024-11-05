@@ -17,7 +17,8 @@ class Button:
                       color=ft.colors.WHITE,
                       text_align=ft.TextAlign.CENTER,
                       size=30,
-                      style=ft.TextStyle()
+                      style=ft.TextStyle(),
+                      weight=ft.FontWeight.W_700
         )
         
         btn = ft.ElevatedButton(content=txt,
@@ -25,7 +26,7 @@ class Button:
                                 width=self.width,
                                 bgcolor=ft.colors.INDIGO_700,
                                 height=80,
-                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
+                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
         )
         
         return btn
