@@ -56,32 +56,86 @@ def to_dataframe(file_path: str = None, dataframe: DataFrame = None) -> DataFram
 
     return dataframe
 
+def create_general_graf(dict_of_frames: dict) -> None:
+    # Устанавливаем формат даты и параметры отображения
+    fig, axes = plt.subplots(figsize=(12, 8))
+
+    # Построение графиков
+    for nameG, graf in dict_of_frames.items():
+        graf.plot(ax=axes, label=nameG)
+
+    # Настройки осей и оформления
+    axes.set_xlabel('Дни')
+    axes.xaxis.set_major_formatter(date_form)
+    axes.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+    axes.grid()
+
+    # Отображаем график с плотной компоновкой
+    plt.tight_layout()
+    plt.show()
+
+def create_seasonal_graf(dict_of_frames: dict) -> None:
+    rcParams['figure.figsize'] = 11, 9  # Устанавливаем размер графика
+
+    for nameG, graf in dict_of_frames.items():  # данные берутся из заданных массивов в начале
+
+        decompose = seasonal_decompose(graf, period=6)  # Выполняем сезонное разложение временного ряда graf с периодом 6
+        fig = decompose.plot()  # Создаем графическое представление разложения и сохраняем его в fig
+        fig.suptitle(nameG, fontsize=25)  # Устанавливаем заголовок
+
+        plt.show()  # Отображаем график
+
+def create_moving_average_graf(dict_of_frames: dict) -> None:
+    for nameG, graf in dict_of_frames.items():
+          # Создаем новую фигуру размером 15 на 8 дюймов
+        plt.gca().xaxis.set_major_formatter(date_form)  # Устанавливаем форматтер оси X для текущего график111111111111
+        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))  # Устанавливаем локатор основных делений оси X с интервалом в 2 дня1111111111111
+
+        plt.plot(graf, label=nameG,color='steelblue')  # Строим график временного ряда graf с меткой nameG и цветом steelblue
+        plt.plot(graf.rolling(window=3).mean(), label='Скользящее среднее',color='red')  # Строим график скользящего среднего для временного ряда graf с окном шириной 3 и меткой 'Скользящее среднее', цветом red
+
+        plt.legend(title='', loc='upper left', fontsize=14)  # легенда
+
+        plt.xlabel('Дни', fontsize=14)  # Устанавливаем название оси X как 'Дни' с шрифтом 14
+        plt.title(nameG, fontsize=16)  # Устанавливаем заголовок
+
+        # выведем обе кривые на одном график
+        plt.tight_layout()
+        plt.show()
+
+def create_autocor_graf(dict_of_frames: dict) -> None:
+    for nameG, graf in dict_of_frames.items():  # данные берутся из заданных массивов в начале
+
+        plot_acf(graf)  # Строим автокорреляционную функцию
+        plt.title(nameG, fontsize=16)  # Устанавливаем заголовок графика
+        plt.tight_layout()
+        plt.show()  # Отображаем график
+
+
 
 #создаем DataFrame
 rz = to_dataframe(file_path = 'Кран/Rez/Rez_Month.csv')
 
 allGr = {}
+date_form = mdates.DateFormatter("%d-%m")  # Устанавливаем формат даты для  графиков как "день-месяц"
 
 # Сохранение данных в отдельные CSV файлы для каждого статуса
 for rez, group in rz.groupby('Результат'):
     #По какой переменной будет подсчет(по дням = D)
-    rez_counts = group.groupby(pd.Grouper(freq='D')).size()# Группируем данные по дням и подсчитываем количество записей в столбце 'ID'
+    rez_counts = group.groupby(pd.Grouper(freq='D')).size()# Группируем данные по дням и подсчитываем количество записей
 
     if rez.endswith(':'):
         rez = rez[:-1]
 
-    rez_df = rez_counts.to_frame(name= rez )
+    rez_df = rez_counts.to_frame(name=rez )
     allGr[rez] = to_dataframe(dataframe = rez_df)
 
-    print(allGr[rez])
 
 
-
-
-
-
-
-
+create_general_graf(dict_of_frames=allGr)
+create_seasonal_graf(dict_of_frames=allGr)
+create_moving_average_graf(dict_of_frames=allGr)
+create_autocor_graf(dict_of_frames=allGr)
 
 
 
