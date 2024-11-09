@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt #Библиотека для создания в
 import matplotlib.dates as mdates #форматирование,отображение и манипуляция с датами на графиках
 import numpy as np #Библиотека для численных вычислений.предоставляет поддержку многомерных массивов и матриц
 from datetime import datetime# Модуль для работы с датами и временем.
-
 from matplotlib.figure import Figure
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from statsmodels.graphics.tsaplots import plot_acf   # Функция для построения графика автокорреляционной функции (ACF).
@@ -19,10 +18,6 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, m
 from tqdm import tqdm #Библиотека для отображения индикатора прогресса при выполнении итераций в циклах
 from statsmodels.tsa.arima.model import ARIMA #Библиотека для статистического анализа и построения временных рядов.
 
-
-
-
-# Код для разделения на разные файлы для REZ ////////////////////////////////////////
 
 
 def to_dataframe(file_path: str = None, dataframe: DataFrame = None) -> DataFrame:
@@ -74,46 +69,68 @@ def create_general_graf(dict_of_frames: dict) -> Figure:
 
     # Отображаем график с плотной компоновкой
     plt.tight_layout()
-    return plt
+
+    return fig
 
 
-def create_seasonal_graf(dict_of_frames: dict) -> Figure:
+def create_seasonal_graf(dict_of_frames: dict) -> list[Figure]:
     rcParams['figure.figsize'] = 11, 9  # Устанавливаем размер графика
+    fig_list = []
 
     for nameG, graf in dict_of_frames.items():  # данные берутся из заданных массивов в начале
 
         decompose = seasonal_decompose(graf, period=6)  # Выполняем сезонное разложение временного ряда graf с периодом 6
         fig = decompose.plot()  # Создаем графическое представление разложения и сохраняем его в fig
         fig.suptitle(nameG, fontsize=25)  # Устанавливаем заголовок
+        fig_list.append(fig)
 
-        return plt
+    return fig_list
 
-def create_moving_average_graf(dict_of_frames: dict) -> Figure:
+
+
+def create_moving_average_graf(dict_of_frames: dict) -> list[Figure]:
+    fig_list = []
     for nameG, graf in dict_of_frames.items():
-          # Создаем новую фигуру размером 15 на 8 дюймов
-        plt.gca().xaxis.set_major_formatter(date_form)  # Устанавливаем форматтер оси X для текущего график111111111111
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))  # Устанавливаем локатор основных делений оси X с интервалом в 2 дня1111111111111
 
-        plt.plot(graf, label=nameG,color='steelblue')  # Строим график временного ряда graf с меткой nameG и цветом steelblue
-        plt.plot(graf.rolling(window=3).mean(), label='Скользящее среднее',color='red')  # Строим график скользящего среднего для временного ряда graf с окном шириной 3 и меткой 'Скользящее среднее', цветом red
+        fig, ax = plt.subplots(figsize=(15, 8))
 
-        plt.legend(title='', loc='upper left', fontsize=14)  # легенда
+        ax.xaxis.set_major_formatter(date_form)
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
 
-        plt.xlabel('Дни', fontsize=14)  # Устанавливаем название оси X как 'Дни' с шрифтом 14
-        plt.title(nameG, fontsize=16)  # Устанавливаем заголовок
+        ax.plot(graf, label=nameG, color='steelblue')
+        ax.plot(graf.rolling(window=3).mean(), label='Скользящее среднее', color='red')
+
+        # Настройки графика
+        ax.set_xlabel('Дни', fontsize=14)
+        ax.set_title(nameG, fontsize=16)
+        ax.legend(title='', loc='upper left', fontsize=14)
 
         # выведем обе кривые на одном график
+        fig.tight_layout()
+        fig.show()
+        fig_list.append(fig)
+
+    return fig_list
+
+
+def create_autocor_graf(dict_of_frames: dict) -> list[Figure]:
+
+    fig_list = []
+    for nameG, graf in dict_of_frames.items():
+        fig, ax = plt.subplots(figsize=(10, 6))
+        # Строим автокорреляционный график на заданных осях
+        plot_acf(graf, ax=ax)
+
+        # Устанавливаем заголовок графика
+        ax.set_title(nameG, fontsize=16)
+
+        # Плотная компоновка
         plt.tight_layout()
-        return plt
 
-def create_autocor_graf(dict_of_frames: dict) -> None:
-    for nameG, graf in dict_of_frames.items():  # данные берутся из заданных массивов в начале
+        # Возвращаем объект Figure
+        fig_list.append(fig)
 
-        plot_acf(graf)  # Строим автокорреляционную функцию
-        plt.title(nameG, fontsize=16)  # Устанавливаем заголовок графика
-        plt.tight_layout()
-        return plt
-
+    return fig_list
 
 
 #создаем DataFrame
@@ -132,77 +149,3 @@ for rez, group in rz.groupby('Результат'):
 
     rez_df = rez_counts.to_frame(name=rez )
     allGr[rez] = to_dataframe(dataframe = rez_df)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# #Устанавливаем процентный размер данных для анализа
-#
-# percentsize = 1  # 100% (берем все данные)
-#
-# # Создаем массив `allGr`, содержащий первые percentsize*100% данных из каждого массива (ID, WAR, SUC, S_OK, ERR)
-# allGr = [arr[:int(len(arr) * percentsize)] for arr in [ID, WAR, SUC, S_OK, ERR]]
-#
-# # Задаем имена для каждого массива данных, которые будут использоваться в легенде графика
-# nameGr = ['id', 'WAR', 'SUC', 'S_OK', 'ERR']
-#
-# # Настраиваем формат отображения даты на оси X и создаем фигуру и ось для графиков
-# fig, ax = plt.subplots(figsize=(12, 8))  # Создаем фигуру размером 12x8 дюймов
-# date_form = mdates.DateFormatter("%d-%m")  # Устанавливаем формат даты для оси X: "день-месяц"
-#
-# # Строим график для каждого массива данных из `allGr` и присваиваем имя из `nameGr`
-# for graf, name in zip(allGr, nameGr):
-#     ax.plot(graf, label=name)  # Добавляем линию для текущего массива данных с меткой `name`
-#
-# # Настраиваем подписи и формат оси X
-# ax.set_xlabel('Дни')  # Подписываем ось X как "Дни"
-# ax.xaxis.set_major_formatter(date_form)  # Применяем формат даты к основной оси X
-# ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))  # Устанавливаем деления по оси X каждые 2 дня
-#
-# # Отображаем дополнительные элементы графика
-# plt.legend()  # Добавляем легенду, чтобы обозначить каждый массив данных
-# plt.grid()  # Включаем сетку для лучшей читаемости графика
-# plt.tight_layout()  # Автоматически регулируем компоненты графика для минимизации пустого пространства
-# plt.show()  # Отображаем график
