@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt #Библиотека для создания в
 import matplotlib.dates as mdates #форматирование,отображение и манипуляция с датами на графиках
 import numpy as np #Библиотека для численных вычислений.предоставляет поддержку многомерных массивов и матриц
 from datetime import datetime# Модуль для работы с датами и временем.
+
+from matplotlib.figure import Figure
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from statsmodels.graphics.tsaplots import plot_acf   # Функция для построения графика автокорреляционной функции (ACF).
 from statsmodels.graphics.tsaplots import plot_pacf   # Функция для построения графика частичной автокорреляционной функции (PACF).
@@ -56,7 +58,7 @@ def to_dataframe(file_path: str = None, dataframe: DataFrame = None) -> DataFram
 
     return dataframe
 
-def create_general_graf(dict_of_frames: dict) -> None:
+def create_general_graf(dict_of_frames: dict) -> Figure:
     # Устанавливаем формат даты и параметры отображения
     fig, axes = plt.subplots(figsize=(12, 8))
 
@@ -72,9 +74,10 @@ def create_general_graf(dict_of_frames: dict) -> None:
 
     # Отображаем график с плотной компоновкой
     plt.tight_layout()
-    plt.show()
+    return plt
 
-def create_seasonal_graf(dict_of_frames: dict) -> None:
+
+def create_seasonal_graf(dict_of_frames: dict) -> Figure:
     rcParams['figure.figsize'] = 11, 9  # Устанавливаем размер графика
 
     for nameG, graf in dict_of_frames.items():  # данные берутся из заданных массивов в начале
@@ -83,9 +86,9 @@ def create_seasonal_graf(dict_of_frames: dict) -> None:
         fig = decompose.plot()  # Создаем графическое представление разложения и сохраняем его в fig
         fig.suptitle(nameG, fontsize=25)  # Устанавливаем заголовок
 
-        plt.show()  # Отображаем график
+        return plt
 
-def create_moving_average_graf(dict_of_frames: dict) -> None:
+def create_moving_average_graf(dict_of_frames: dict) -> Figure:
     for nameG, graf in dict_of_frames.items():
           # Создаем новую фигуру размером 15 на 8 дюймов
         plt.gca().xaxis.set_major_formatter(date_form)  # Устанавливаем форматтер оси X для текущего график111111111111
@@ -101,7 +104,7 @@ def create_moving_average_graf(dict_of_frames: dict) -> None:
 
         # выведем обе кривые на одном график
         plt.tight_layout()
-        plt.show()
+        return plt
 
 def create_autocor_graf(dict_of_frames: dict) -> None:
     for nameG, graf in dict_of_frames.items():  # данные берутся из заданных массивов в начале
@@ -109,7 +112,7 @@ def create_autocor_graf(dict_of_frames: dict) -> None:
         plot_acf(graf)  # Строим автокорреляционную функцию
         plt.title(nameG, fontsize=16)  # Устанавливаем заголовок графика
         plt.tight_layout()
-        plt.show()  # Отображаем график
+        return plt
 
 
 
@@ -132,10 +135,7 @@ for rez, group in rz.groupby('Результат'):
 
 
 
-create_general_graf(dict_of_frames=allGr)
-create_seasonal_graf(dict_of_frames=allGr)
-create_moving_average_graf(dict_of_frames=allGr)
-create_autocor_graf(dict_of_frames=allGr)
+
 
 
 
