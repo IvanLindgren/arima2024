@@ -57,7 +57,7 @@ def home(pg:PageData) -> None:
     btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
     btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
 
-    action_button_style = ft.ButtonStyle(color=ft.colors.BLUE)
+    action_button_style = ft.ButtonStyle(color=ft.colors.WHITE)
     banner = ft.Banner(
         bgcolor=ft.colors.INDIGO_700,
         content=ft.Text(

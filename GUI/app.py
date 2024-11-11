@@ -30,7 +30,7 @@ def main(page: ft.Page) -> None:
            '/plot_balka': plot_balka,
            '/plot_scaner': plot_scaner
         },
-        navigator_animation=NavigatorAnimation(NavigatorAnimation.FADE)
+        navigator_animation=NavigatorAnimation(NavigatorAnimation.FADE),
     )
     
     navigator.render(page)
