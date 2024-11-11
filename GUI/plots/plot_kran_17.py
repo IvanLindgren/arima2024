@@ -1,15 +1,21 @@
-import flet as ft
+import flet as ft 
 import matplotlib
 import time
 from utils.Buttons import Button
 from flet_navigator import *
 from flet.matplotlib_chart import MatplotlibChart
-from plots.test_plot import plot
-matplotlib.use('svg')
+from plots.test_plot import plot, save_plot
+matplotlib.use("svg")
 
 
 @route('/plot_kran_17')
-def plot_kran_17(pg:PageData) -> None:
+def plot_kran_17(pg: PageData) -> None:
+    
+    # Хэш-таблица с выбранными файлами
+    print(pg.arguments)
+    
+    def save(e: ft.FilePickerResultEvent):
+        save_plot(figure=cur_plot.content.figure, path=e.path, plot_name='График 1.png')
     
     # Перейти на следующий график
     def next_plot(e) -> None:
@@ -35,58 +41,76 @@ def plot_kran_17(pg:PageData) -> None:
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     pg.page.window.min_width, pg.page.window.max_width = 1000, 1000
     pg.page.window.min_height, pg.page.window.max_height = 700, 700
-    
-    # Текст с названием программы
-    txt_label = ft.Text(
-        value='Кран 17 (графики)',
-        color=ft.colors.WHITE,
-        size=70,
-        width=810,
-        text_align=ft.TextAlign.CENTER,
-        weight=ft.FontWeight.W_700
+
+    pg.page.appbar = ft.AppBar(
+        title=ft.Text(
+            value='Графики (Кран 17)',
+            color=ft.colors.WHITE,
+            size=80,
+            width=800,
+            text_align=ft.TextAlign.CENTER,
+            weight=ft.FontWeight.W_700,
+        ),
+        center_title=True,
+        toolbar_height=110,
+        bgcolor=ft.colors.INDIGO_700,
+        actions=[
+            ft.IconButton(
+                icon=ft.icons.HOME,
+                icon_color=ft.colors.WHITE,
+                icon_size=52,
+                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
+            ),
+            ft.IconButton(
+                icon=ft.icons.SAVE,
+                icon_color=ft.colors.WHITE,
+                icon_size=52,
+                on_click= lambda _: file_picker.get_directory_path()
+                
+            )
+        ]
     )
 
-    btn_go_home = Button(val='На главную', page=pg.page).create_btn()
-    btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
-    
+    file_picker = ft.FilePicker(on_result=save)
+    pg.page.overlay.append(file_picker)
+
     btn_next_plot = ft.IconButton(
         icon=ft.icons.ARROW_RIGHT,
         icon_size=40,
         bgcolor=ft.colors.INDIGO_700,
         icon_color=ft.colors.WHITE,
-        tooltip='Next plot'
+        tooltip='Следующий график',
     )
-
     btn_prev_plot = ft.IconButton(
         icon=ft.icons.ARROW_LEFT,
         icon_size=40,
         bgcolor=ft.colors.INDIGO_700,
         icon_color=ft.colors.WHITE,
-        tooltip='Prev plot'
+        tooltip='Предыдущий график'
     )
 
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
-
+    
     cur_plot = ft.Card(
-        width=400,
-        height=400,
-        color=ft.colors.INDIGO_700
+        width=800,
+        height=500,
+        color=ft.colors.INDIGO_700,
+        shape=ft.RoundedRectangleBorder(radius=20)
     )
-
+    
     all_content = ft.Column(
         [
-            txt_label,
-            btn_go_home,
             ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
         ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
-
+    
     pg.page.add(all_content)
 
     time.sleep(0.01)
-
+    
     plots = [MatplotlibChart(figure=plot(), original_size=True, expand=True) for _ in range(10)]
     
     cur_plot.content = plots[0]
     cur_plot.update()
+   

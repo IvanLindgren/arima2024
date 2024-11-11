@@ -1,15 +1,18 @@
 import flet as ft # Фреймворк для создания графического приложения
-from utils.Buttons import Button
-from flet_navigator import *
+from utils.Buttons import Button # Шаблон кнопок
+from utils.Banner_text import banner_text # Текст баннера
+from flet_navigator import * # Дополнение для более удобной навигации между страницами
 
 
 @route('/')
 def home(pg:PageData) -> None:
     
+    # Открытие информационного банера
     def open_banner(e) -> None:
         pg.page.open(banner)
         pg.page.update()
 
+    # Закрытие информационного баннера
     def close_banner(e) -> None:
         pg.page.close(banner)
         pg.page.update()
@@ -22,6 +25,8 @@ def home(pg:PageData) -> None:
     pg.page.bgcolor = ft.colors.INDIGO_900
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    
+    # Верхняя панель приложения
     pg.page.appbar = ft.AppBar(
         title=ft.Text(
             value='ARIMA',
@@ -33,7 +38,7 @@ def home(pg:PageData) -> None:
             style=ft.TextStyle(letter_spacing=20),
         ),
         center_title=True,
-        toolbar_height=100,
+        toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
         actions=[
             ft.IconButton(
@@ -43,6 +48,25 @@ def home(pg:PageData) -> None:
                 on_click=open_banner
             )
         ]
+    )
+
+    # Баннер
+    banner = ft.Banner(
+        bgcolor=ft.colors.INDIGO_500,
+        content=ft.Text(
+            value=banner_text,
+            size=25,
+            color=ft.colors.WHITE,
+            weight=ft.FontWeight.W_300
+        ),
+        actions=[
+            ft.TextButton(
+                text="Закрыть", 
+                on_click=close_banner,
+                style=ft.ButtonStyle(color=ft.colors.WHITE)
+            )
+        ],
+        force_actions_below=True
     )
 
     # Создание кнопок для главной страницы
@@ -57,22 +81,7 @@ def home(pg:PageData) -> None:
     btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
     btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
 
-    action_button_style = ft.ButtonStyle(color=ft.colors.WHITE)
-    banner = ft.Banner(
-        bgcolor=ft.colors.INDIGO_700,
-        content=ft.Text(
-            'Текст баннера',
-            size=30,
-            color=ft.colors.WHITE,
-            weight=ft.FontWeight.W_500
-        ),
-        actions=[
-            ft.TextButton(text="Закрыть", style=action_button_style, on_click=close_banner)
-        ],
-        force_actions_below=True
-    )
-    
-    # Добавляем все созданные объекты на страницу
+     # Добавляем все созданные объекты на страницу
     pg.page.add(
         ft.Column(
             [

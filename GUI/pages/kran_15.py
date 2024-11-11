@@ -10,9 +10,12 @@ def kran_15(pg: PageData) -> None:
     
     # Очистка списка выбранных файлов
     def clear_files(e) -> None:
+        sel_files.clear()
         sel_files_names.content.controls.clear()
         sel_files_names.update()
-    
+        btn_calculate.disabled = True
+        btn_calculate.update()
+        
     # Обработка ошибок (файлы дубликаты, некорректный формат файла)
     def error_handler(bad_files: set[str], duplicates: set[str]) -> None:
         # Временная переменаая, которая содержит список всех валидных файлов
@@ -48,9 +51,13 @@ def kran_15(pg: PageData) -> None:
         
         # Выводим информацию о всех файлах на экран
         sel_files_names.update()
+        btn_clear_files.disabled=True
+        btn_clear_files.update()
         time.sleep(2)
         
         # Спустя 2 секунду оставляем на экране список, состоящий только из валидных файлов
+        btn_clear_files.disabled=False
+        btn_clear_files.update()
         sel_files_names.content.controls = tmp
         sel_files_names.update()
     
@@ -86,6 +93,9 @@ def kran_15(pg: PageData) -> None:
                     )
                     
                     sel_files[file.name] = file.path  # Добавляем файл в хеш-таблицу
+                    
+                    btn_calculate.disabled = False
+                    btn_calculate.update()
             
             # Если хотя бы одно множество не пустое, запускаем обработку ошибок
             if duplicates or bad_files:
@@ -101,18 +111,19 @@ def kran_15(pg: PageData) -> None:
     pg.page.bgcolor = ft.colors.INDIGO_900
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    
+    #  Верхняя панель приложения
     pg.page.appbar = ft.AppBar(
         title=ft.Text(
-            value='КРАН 15',
+            value='Кран 15',
             color=ft.colors.WHITE,
             size=80,
             width=400,
             text_align=ft.TextAlign.CENTER,
             weight=ft.FontWeight.W_700,
-            #style=ft.TextStyle(letter_spacing=20),
         ),
         center_title=True,
-        toolbar_height=100,
+        toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
         actions=[
             ft.IconButton(
@@ -128,7 +139,7 @@ def kran_15(pg: PageData) -> None:
     file_picker = ft.FilePicker(on_result=pick_files)
     pg.page.overlay.append(file_picker)
     
-    # Список выбранных файлов
+    # Хеш-таблица с именами файлов и путями к ним
     sel_files = dict()
     
     # Колонка с именами выбранных файлов
@@ -142,14 +153,10 @@ def kran_15(pg: PageData) -> None:
         )
     )
 
-    
-    
-    
     # Создание кнопок для главной страницы
     btn_go_home = Button(val='На главную', page=pg.page, icon_name=ft.icons.HOME).create_btn()
     btn_pick_files = Button(val='Выбрать файл', page=pg.page, icon_name=ft.icons.FOLDER).create_btn()
     btn_calculate = Button(val='Произвести расчет', page=pg.page, icon_name=ft.icons.PLAY_ARROW).create_btn()
-    #btn_clear_files = Button(val='Очистить список', page=pg.page, icon_name=ft.icons.CLEAR, height=40).create_btn()
     btn_clear_files = ft.ElevatedButton(
         text='',
         width=400,
@@ -167,12 +174,15 @@ def kran_15(pg: PageData) -> None:
             ], alignment=ft.MainAxisAlignment.START, spacing=30
         )
     )
+    btn_calculate.disabled = True
+
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
     btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
-    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_15', page=pg.page)
+    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_15', page=pg.page, args=sel_files)
     btn_clear_files.on_click = clear_files
 
+    # Объединяем в один объект колонку с именами выбранных файлов и кнопку "очистить список"
     sel_files_field = ft.Card(
         content=ft.Column([sel_files_names, btn_clear_files]), 
         shape=ft.RoundedRectangleBorder(radius=20), 
