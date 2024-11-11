@@ -70,7 +70,8 @@ def plot_kran_17(pg:PageData) -> None:
 
     cur_plot = ft.Card(
         width=400,
-        height=400
+        height=400,
+        color=ft.colors.INDIGO_700
     )
 
     all_content = ft.Column(

@@ -4,12 +4,12 @@ import flet as ft
 # Класс, который отвечает за создание типовых кнопок, которые используются во всем приложении
 class Button:
     # Инициализация входных параметров
-    def __init__(self, val: str,  page: ft.Page, icon=None, width=400) -> None:
+    def __init__(self, page: ft.Page, width=400, val=None, icon_name=ft.icons.HOME) -> None:
         self.val = val
         self.width = width
         self.page = page
-        self.icon = icon
-
+        self.icon_name = icon_name
+    
     # Создание кнопки на основе входных параметров
     def create_btn(self) -> ft.ElevatedButton:
         
@@ -17,16 +17,21 @@ class Button:
                       color=ft.colors.WHITE,
                       text_align=ft.TextAlign.CENTER,
                       size=30,
-                      style=ft.TextStyle(),
-                      weight=ft.FontWeight.W_700
+                      weight=ft.FontWeight.W_700,
         )
         
-        btn = ft.ElevatedButton(content=txt,
-                                text=None,
+        btn = ft.ElevatedButton(style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
                                 width=self.width,
                                 bgcolor=ft.colors.INDIGO_700,
                                 height=80,
-                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
+                                content=ft.Row(
+                                    [
+                                        ft.Icon(self.icon_name, size=30, color=ft.colors.WHITE),
+                                        txt
+                                    ],
+                                    alignment=ft.MainAxisAlignment.START,
+                                    spacing=30
+                                )
         )
         
         return btn

@@ -70,7 +70,7 @@ def kran_15(pg: PageData) -> None:
                     bad_files.add(file.name)
                 
                 else: 
-                    # Выводим имя файла на экран                                                                
+                    # Добавляем имя корректного файла в список                                                               
                     sel_files_names.content.controls.append( 
                         ft.Text(
                             file.name,
@@ -81,7 +81,7 @@ def kran_15(pg: PageData) -> None:
                         )
                     )
                     
-                    sel_files[file.name] = file.path  # Добавляем файлы в хеш - таблицу
+                    sel_files[file.name] = file.path  # Добавляем файл в хеш-таблицу
             
             # Если хотя бы одно множество не пустое, запускаем обработку ошибок
             if duplicates or bad_files:
@@ -97,8 +97,28 @@ def kran_15(pg: PageData) -> None:
     pg.page.bgcolor = ft.colors.INDIGO_900
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    pg.page.window.min_width, pg.page.window.max_width = 1000, 1000
-    pg.page.window.min_height, pg.page.window.max_height = 700, 700
+    pg.page.appbar = ft.AppBar(
+        title=ft.Text(
+            value='КРАН 15',
+            color=ft.colors.WHITE,
+            size=80,
+            width=400,
+            text_align=ft.TextAlign.CENTER,
+            weight=ft.FontWeight.W_700,
+            #style=ft.TextStyle(letter_spacing=20),
+        ),
+        center_title=True,
+        toolbar_height=100,
+        bgcolor=ft.colors.INDIGO_700,
+        actions=[
+            ft.IconButton(
+                icon=ft.icons.HOME,
+                icon_color=ft.colors.WHITE,
+                icon_size=52,
+                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
+            )
+        ]
+    )
     
     # Объект для обработки выбора файла/файлов
     file_picker = ft.FilePicker(on_result=pick_files)
@@ -130,9 +150,9 @@ def kran_15(pg: PageData) -> None:
     )
 
     # Создание кнопок для главной страницы
-    btn_go_home = Button(val='На главную', page=pg.page).create_btn()
-    btn_calculate = Button(val='Произвести расчет', page=pg.page).create_btn()
-    btn_pick_files = Button(val='Выбрать файл', page=pg.page).create_btn()
+    btn_go_home = Button(val='На главную', page=pg.page, icon_name=ft.icons.HOME).create_btn()
+    btn_calculate = Button(val='Произвести расчет', page=pg.page, icon_name=ft.icons.PLAY_ARROW).create_btn()
+    btn_pick_files = Button(val='Выбрать файл', page=pg.page, icon_name=ft.icons.FOLDER).create_btn()
     
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
@@ -143,8 +163,8 @@ def kran_15(pg: PageData) -> None:
     pg.page.add(
         ft.Column(
             [
-                txt_label,
-                btn_go_home,
+                #txt_label,
+                #btn_go_home,
                 btn_calculate,
                 btn_pick_files,
                 sel_files_names

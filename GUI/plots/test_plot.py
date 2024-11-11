@@ -11,3 +11,5 @@ def plot():
     
     ax.plot(x, y)
     return fig
+
+    
