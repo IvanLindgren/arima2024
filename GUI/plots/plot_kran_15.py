@@ -1,10 +1,13 @@
 import flet as ft 
 import matplotlib
 import time
+import sys
+sys.path.append('C:/Users/user/Desktop/arima2024')
 from utils.Buttons import Button
 from flet_navigator import *
 from flet.matplotlib_chart import MatplotlibChart
 from plots.test_plot import plot, save_plot
+from Kran_15.Kran_15 import get_fig_list
 matplotlib.use("svg")
 
 
@@ -12,7 +15,9 @@ matplotlib.use("svg")
 def plot_kran_15(pg: PageData) -> None:
     
     # Хэш-таблица с выбранными файлами
-    print(pg.arguments)
+    sel_files = pg.arguments
+    pathes = [i for i in sel_files.values()]
+    names = [i for i in sel_files.keys()]
     
     def save(e: ft.FilePickerResultEvent):
         save_plot(figure=cur_plot.content.figure, path=e.path, plot_name='График 1.png')
@@ -107,8 +112,11 @@ def plot_kran_15(pg: PageData) -> None:
 
     time.sleep(0.01)
     
-    plots = [MatplotlibChart(figure=plot(), original_size=True, expand=True) for _ in range(10)]
+    plots = [MatplotlibChart(figure=fig, expand=True) for fig in get_fig_list(path=pathes[0])]
+    #plots = [MatplotlibChart(figure=plot(), original_size=True, expand=True) for _ in range(10)]
     
     cur_plot.content = plots[0]
     cur_plot.update()
+
+
    

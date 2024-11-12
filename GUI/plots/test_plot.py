@@ -15,4 +15,9 @@ def plot() -> None:
 def save_plot(figure: plt.Figure, path: str, plot_name: str) -> None:
     fig = figure
     fig.savefig(f"{path}/{plot_name}")
+
+
+a = {'a': 1, 'b': 2, 'c': 3}
+for i in a.values():
+    print(i)
     
