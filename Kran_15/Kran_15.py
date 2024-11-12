@@ -17,7 +17,9 @@ from pylab import rcParams #параметры для графиков
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 from tqdm import tqdm #Библиотека для отображения индикатора прогресса при выполнении итераций в циклах
 from statsmodels.tsa.arima.model import ARIMA #Библиотека для статистического анализа и построения временных рядов.
-
+from scripts.time_series_analysis import load_and_prepare_data, check_stationarity, decompose_time_series
+from scripts.arima_tuning import tune_arima_model, evaluate_arima_with_best_params
+from scripts.arima_forecasting import train_and_forecast, suppress_warnings, comparative_analysis
 #             Функция для загрузки и обработки данных из CSV файла
 
 def to_dataframe(file_path: str = None, dataframe: DataFrame = None) -> DataFrame:
@@ -154,3 +156,54 @@ for rez, group in rz.groupby('Результат'):
     # Создаем DataFrame из результатов и сохраняем его в словарь
     rez_df = rez_counts.to_frame(name=rez)
     allGr[rez] = to_dataframe(dataframe=rez_df)
+
+# Устанавливаем формат даты для графиков
+date_form = mdates.DateFormatter("%d-%m")
+
+# Подбор гиперпараметров и прогнозирование для каждого временного ряда
+for name, time_series in allGr.items():
+    print(f"\nПодбор параметров для {name}")
+
+    # Подбор оптимальных гиперпараметров ARIMA
+    best_order = tune_arima_model(time_series)
+    print(f"Лучшие параметры для {name}: {best_order}")
+
+    # Обучение модели и прогнозирование на 14 дней
+    print(f"\nПрогноз на 14 дней для {name}:")
+    forecast = train_and_forecast(time_series, best_order)
+
+    # Сравнительный анализ на данных за 1 месяц и за 2 месяца
+    print(f"\nСравнительный анализ для {name}:")
+    comparative_analysis(time_series, best_order)
+
+# Визуализация графиков
+fig, ax = plt.subplots(figsize=(12, 8))
+for name, series in allGr.items():
+    series.plot(ax=ax, label=name)
+
+ax.set_xlabel('Дни')
+ax.xaxis.set_major_formatter(date_form)
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+ax.grid()
+plt.tight_layout()
+plt.legend()
+plt.show()
+
+# Построение сезонных графиков для каждого временного ряда
+for name, series in allGr.items():
+    print(f"Сезонная декомпозиция для {name}")
+    decompose_time_series(series)
+
+# Построение графиков автокорреляции и частичной автокорреляции
+for name, series in allGr.items():
+    print(f"График автокорреляции для {name}")
+    plot_acf(series.dropna())
+    plt.title(f"Автокорреляция для {name}")
+    plt.show()
+
+    print(f"График частичной автокорреляции для {name}")
+    plot_pacf(series.dropna())
+    plt.title(f"Частичная автокорреляция для {name}")
+    plt.show()
+
+
