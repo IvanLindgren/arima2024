@@ -52,12 +52,16 @@ def kran_15(pg: PageData) -> None:
         # Выводим информацию о всех файлах на экран
         sel_files_names.update()
         btn_clear_files.disabled=True
+        btn_calculate.disabled = True
+        btn_calculate.update()
         btn_clear_files.update()
         time.sleep(2)
         
         # Спустя 2 секунду оставляем на экране список, состоящий только из валидных файлов
         btn_clear_files.disabled=False
+        btn_calculate.disabled = False
         btn_clear_files.update()
+        btn_calculate.update()
         sel_files_names.content.controls = tmp
         sel_files_names.update()
     
