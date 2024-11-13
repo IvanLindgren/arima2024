@@ -1,14 +1,14 @@
 import flet as ft 
 import matplotlib
+import matplotlib.pyplot as plt
 import time
 import sys
 sys.path.append('C:/Users/user/Desktop/arima2024')
-from utils.Buttons import Button
 from flet_navigator import *
 from flet.matplotlib_chart import MatplotlibChart
-from plots.test_plot import plot, save_plot
-from Kran_15.Kran_15 import get_fig_list
+from Kran_15.Kran_15 import get_plots_kran_15
 matplotlib.use("svg")
+matplotlib.use('agg')
 
 
 @route('/plot_kran_15')
@@ -16,24 +16,28 @@ def plot_kran_15(pg: PageData) -> None:
     
     # Хэш-таблица с выбранными файлами
     sel_files = pg.arguments
-    pathes = [i for i in sel_files.values()]
-    names = [i for i in sel_files.keys()]
+    pathes = list(sel_files.values())
+    names = list(sel_files.keys())
+    if len(sel_files) == 1:
+        pathes = pathes[0]
+        names = names[0]
+    
     
     def save(e: ft.FilePickerResultEvent):
-        save_plot(figure=cur_plot.content.figure, path=e.path, plot_name='График 1.png')
-    
+        cur_plot.content.figure.savefig(f"{e.path}/График.png") 
+        
     # Перейти на следующий график
     def next_plot(e) -> None:
-        cur_index = plots.index(cur_plot.content)
-        if cur_index < 6:
-            cur_plot.content = plots[cur_index + 1]
+        cur_index = plot_figs.index(cur_plot.content)
+        if cur_index < len(plot_figs) - 1:
+            cur_plot.content = plot_figs[cur_index + 1]
         cur_plot.update()
 
     # Перейти на предыдущий график
     def prev_plot(e) -> None:
-        cur_index = plots.index(cur_plot.content)
-        if cur_index > 1:
-            cur_plot.content = plots[cur_index - 1]
+        cur_index = plot_figs.index(cur_plot.content)
+        if cur_index >= 1:
+            cur_plot.content = plot_figs[cur_index - 1]
         cur_plot.update()
 
     # Настройки окна программы
@@ -112,11 +116,20 @@ def plot_kran_15(pg: PageData) -> None:
 
     time.sleep(0.01)
     
-    plots = [MatplotlibChart(figure=fig, expand=True) for fig in get_fig_list(path=pathes[0])]
-    #plots = [MatplotlibChart(figure=plot(), original_size=True, expand=True) for _ in range(10)]
+    dict_plots = get_plots_kran_15(path=pathes)
+    #plot_names = [name for name in dict_plots.keys()]
     
-    cur_plot.content = plots[0]
+    plot_figs = []
+    for plot in dict_plots.values():
+        if type(plot) == list:
+            for subplot in plot:
+                plot_figs.append(MatplotlibChart(figure=subplot, original_size=True, expand=True))
+        else:
+            plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
+    
+    cur_plot.content = plot_figs[0]
     cur_plot.update()
-
+    
+    
 
    
