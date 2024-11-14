@@ -53,6 +53,28 @@ def tune_arima_with_grid_search(time_series, p_values=range(0, 4), d_values=rang
 def display_metrics(metrics):
     print(f"\nМетрики для оптимальной модели:\nMSE: {metrics['MSE']:.4f}\nMAE: {metrics['MAE']:.4f}\nR2: {metrics['R2']:.4f}\nMAPE: {metrics['MAPE']:.4f}")
 
+def find_best_seasonal_period(time_series, periods=[7, 14, 24, 30]):
+    """
+    Определяет лучший период сезонности, минимизируя AIC.
+    :param time_series: Временной ряд
+    :param periods: Список возможных периодов для тестирования
+    :return: Лучший период сезонности
+    """
+    best_period = None
+    best_aic = float("inf")
+    for period in periods:
+        try:
+            model = ARIMA(time_series, seasonal_order=(1, 1, 1, period))
+            model_fit = model.fit()
+            if model_fit.aic < best_aic:
+                best_aic = model_fit.aic
+                best_period = period
+        except Exception as e:
+            print(f"Ошибка при проверке периода {period}: {e}")
+            continue
+    print(f"Лучший период сезонности: {best_period} с AIC: {best_aic}")
+    return best_period
+
 
 # Функция для оценки модели с оптимизированными гиперпараметрами
 def evaluate_arima_with_best_params(time_series, order, seasonal_order=None, forecast_steps=14, freq='D'):
