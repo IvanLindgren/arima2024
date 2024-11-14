@@ -1,6 +1,5 @@
 import flet as ft 
 import matplotlib
-import matplotlib.pyplot as plt
 import time
 import sys
 sys.path.append('C:/Users/user/Desktop/arima2024')
@@ -14,31 +13,39 @@ matplotlib.use('agg')
 @route('/plot_kran_15')
 def plot_kran_15(pg: PageData) -> None:
     
-    # Хэш-таблица с выбранными файлами
+    # Хеш-таблица с файлами, которые выбрал пользователь на предыдущей странице
     sel_files = pg.arguments
+    
+    # Создадим отдельные списки для имен файлов и путей к ним
     pathes = list(sel_files.values())
     names = list(sel_files.keys())
+
+    # Если длина хеш-таблицы 1, значит был передан только 1 файл, поэтому списки превращаются в строки
     if len(sel_files) == 1:
         pathes = pathes[0]
         names = names[0]
     
-    
-    def save(e: ft.FilePickerResultEvent):
-        cur_plot.content.figure.savefig(f"{e.path}/График.png") 
+    # Функция сохранения текущего графика в формате 'выбранная папка'/'название графика'.png
+    def save(e: ft.FilePickerResultEvent) -> None:
+        cur_plot.content.figure.savefig(f"{e.path}/{plot_names[plot_figs.index(cur_plot.content)]}.png") 
         
     # Перейти на следующий график
     def next_plot(e) -> None:
         cur_index = plot_figs.index(cur_plot.content)
         if cur_index < len(plot_figs) - 1:
             cur_plot.content = plot_figs[cur_index + 1]
+            cur_plot_title.value = plot_names[cur_index + 1]
         cur_plot.update()
+        cur_plot_title.update()
 
     # Перейти на предыдущий график
     def prev_plot(e) -> None:
         cur_index = plot_figs.index(cur_plot.content)
         if cur_index >= 1:
             cur_plot.content = plot_figs[cur_index - 1]
+            cur_plot_title.value = plot_names[cur_index - 1]
         cur_plot.update()
+        cur_plot_title.update()
 
     # Настройки окна программы
     pg.page.title = 'Кран 15 (графики)'
@@ -49,15 +56,25 @@ def plot_kran_15(pg: PageData) -> None:
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
+    # Заголовок текущего графика
+    cur_plot_title = ft.Text(
+        color=ft.colors.WHITE,
+        size=40,
+        width=800,
+        weight=ft.FontWeight.W_700,
+        text_align=ft.TextAlign.CENTER
+    )
+
+    btn_save = ft.IconButton(
+        icon=ft.icons.SAVE,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click= lambda _: file_picker.get_directory_path()
+    )
+    
+    # Верхняя панель приложенияы
     pg.page.appbar = ft.AppBar(
-        title=ft.Text(
-            value='Графики (Кран 15)',
-            color=ft.colors.WHITE,
-            size=80,
-            width=800,
-            text_align=ft.TextAlign.CENTER,
-            weight=ft.FontWeight.W_700,
-        ),
+        title=cur_plot_title,
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
@@ -68,19 +85,15 @@ def plot_kran_15(pg: PageData) -> None:
                 icon_size=52,
                 on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
             ),
-            ft.IconButton(
-                icon=ft.icons.SAVE,
-                icon_color=ft.colors.WHITE,
-                icon_size=52,
-                on_click= lambda _: file_picker.get_directory_path()
-                
-            )
+            btn_save
         ]
     )
 
+    # Объект для обработки выбора файла/файлов
     file_picker = ft.FilePicker(on_result=save)
     pg.page.overlay.append(file_picker)
 
+    # Создадим кнопки - иконки
     btn_next_plot = ft.IconButton(
         icon=ft.icons.ARROW_RIGHT,
         icon_size=40,
@@ -96,16 +109,21 @@ def plot_kran_15(pg: PageData) -> None:
         tooltip='Предыдущий график'
     )
 
+    # Зададим кнопкам соотвествующие функции
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
     
+    # Объект, поверх которого будут выводиться текущий график
     cur_plot = ft.Card(
         width=800,
-        height=500,
+        height=525,
         color=ft.colors.INDIGO_700,
         shape=ft.RoundedRectangleBorder(radius=20)
     )
+
     
+
+    # Добавляем все созданные объекты на страницу
     all_content = ft.Column(
         [
             ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
@@ -114,21 +132,48 @@ def plot_kran_15(pg: PageData) -> None:
     
     pg.page.add(all_content)
 
+    # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
     
-    dict_plots = get_plots_kran_15(path=pathes)
-    #plot_names = [name for name in dict_plots.keys()]
+    try:
+        # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
+        dict_plots = get_plots_kran_15(path=pathes)
+        
+        # Создадим отдельные списки для графиков и их заголовков 
+        plot_names = []
+        plot_figs = []
+        
+        # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
+        for name, plot in dict_plots.items():
+            if type(plot) == list:
+                for subplot in plot:
+                    plot_figs.append(MatplotlibChart(figure=subplot, original_size=True, expand=True))
+                    plot_names.append(name)
+            else:
+                plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
+                plot_names.append(name)
+        
+        # Выводим текущий график и его заголовок на экран
+        cur_plot.content = plot_figs[0]
+        cur_plot_title.value = plot_names[0]
+        pg.page.appbar.update()
+        cur_plot.update()
+    except:
+        cur_plot.content = ft.Text(
+            value='Ошибка при обработке файла!',
+            color=ft.colors.RED,
+            size=30,
+            italic=True,
+            text_align=ft.TextAlign.CENTER
+        )
+        
+        btn_next_plot.disabled = True
+        btn_prev_plot.disabled = True
+        btn_save.disabled = True
+        pg.page.update()
     
-    plot_figs = []
-    for plot in dict_plots.values():
-        if type(plot) == list:
-            for subplot in plot:
-                plot_figs.append(MatplotlibChart(figure=subplot, original_size=True, expand=True))
-        else:
-            plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
+
     
-    cur_plot.content = plot_figs[0]
-    cur_plot.update()
     
     
 
