@@ -10,74 +10,91 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 from datetime import datetime
 
+# Функция для проверки стационарности
+def check_stationarity(time_series, significance_level=0.05):
+    """
+    Выполняет тесты на стационарность: ADF и KPSS.
 
-# Функция для загрузки данных из CSV и их предобработки
-def load_and_prepare_data(file_path, date_columns=['Дата', 'Время']):
-    try:
-        # Загрузка данных с преобразованием столбцов даты и времени
-        data = pd.read_csv(file_path, parse_dates={'Datetime': date_columns},
-                           date_parser=lambda x: datetime.strptime(x, '%y-%m-%d %H:%M:%S.%f'))
-        data.set_index('Datetime', inplace=True)
-        # Преобразование индекса в формат "только дни"
-        data.index = data.index.normalize()
-        return data
-    except Exception as e:
-        print(f"Ошибка при загрузке данных: {e}")
-        return None
-
-
-# Функция для выполнения тестов на стационарность
-def check_stationarity(time_series, significance_level=0.005):
+    :param time_series: Pandas Series (ожидается `SmoothedResultValue`)
+    :param significance_level: Уровень значимости
+    :return: Словарь с результатами тестов
+    """
     result = {}
+    try:
+        adf_test = adfuller(time_series.dropna())
+        result['ADF Test Statistic'] = adf_test[0]
+        result['ADF p-value'] = adf_test[1]
+        result['ADF Critical Values'] = adf_test[4]
+        result['ADF Stationary'] = adf_test[1] < significance_level
+    except Exception as e:
+        print(f"Ошибка ADF теста: {e}")
+        result['ADF'] = None
 
-    # Тест Дики-Фуллера (ADF)
-    adf_test = adfuller(time_series.dropna())
-    result['ADF Test Statistic'] = adf_test[0]
-    result['ADF p-value'] = adf_test[1]
-    result['ADF Critical Values'] = adf_test[4]
-    result['ADF Stationary'] = adf_test[1] < significance_level
-
-    # Тест Кэйпса (KPSS)
-    kpss_test = kpss(time_series.dropna(), regression='c', nlags="auto")
-    result['KPSS Test Statistic'] = kpss_test[0]
-    result['KPSS p-value'] = kpss_test[1]
-    result['KPSS Critical Values'] = kpss_test[3]
-    result['KPSS Stationary'] = kpss_test[1] > significance_level
+    try:
+        kpss_test = kpss(time_series.dropna(), regression='c', nlags="auto")
+        result['KPSS Test Statistic'] = kpss_test[0]
+        result['KPSS p-value'] = kpss_test[1]
+        result['KPSS Critical Values'] = kpss_test[3]
+        result['KPSS Stationary'] = kpss_test[1] > significance_level
+    except Exception as e:
+        print(f"Ошибка KPSS теста: {e}")
+        result['KPSS'] = None
 
     return result
 
 
 # Функция для визуализации тренда, сезонности и остатка
-def decompose_time_series(time_series, period=6):
-    decomposition = seasonal_decompose(time_series, model='additive', period=period)
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 8))
+def decompose_time_series(time_series, period=24):
+    """
+    Выполняет декомпозицию временного ряда и строит графики.
 
-    ax1.plot(decomposition.trend)
-    ax1.set_title('Trend')
+    :param time_series: Pandas Series
+    :param period: Период сезонности
+    """
+    try:
+        decomposition = seasonal_decompose(time_series, model='additive', period=period)
+        fig, axes = plt.subplots(4, 1, figsize=(12, 10))
 
-    ax2.plot(decomposition.seasonal)
-    ax2.set_title('Seasonal')
+        axes[0].plot(time_series, label='Исходный ряд')
+        axes[0].legend(loc='upper left')
+        axes[0].set_title('Исходный ряд')
 
-    ax3.plot(decomposition.resid)
-    ax3.set_title('Residual')
+        axes[1].plot(decomposition.trend, label='Тренд', color='orange')
+        axes[1].legend(loc='upper left')
+        axes[1].set_title('Тренд')
 
-    plt.tight_layout()
-    plt.show()
+        axes[2].plot(decomposition.seasonal, label='Сезонность', color='green')
+        axes[2].legend(loc='upper left')
+        axes[2].set_title('Сезонность')
+
+        axes[3].plot(decomposition.resid, label='Остаток', color='red')
+        axes[3].legend(loc='upper left')
+        axes[3].set_title('Остаток')
+
+        plt.tight_layout()
+        plt.show()
+    except Exception as e:
+        print(f"Ошибка декомпозиции временного ряда: {e}")
 
 
-# Пример использования
-if __name__ == "__main__":
-    # Путь к файлу данных
-    file_path = 'Кран/Rez/Rez_Month.csv'
-    data = load_and_prepare_data(file_path)
+# Функция для построения графиков автокорреляции и частичной автокорреляции
+def plot_acf_pacf(time_series, lags=40):
+    """
+    Строит графики ACF и PACF.
 
-    if data is not None:
-        # Пример проверки стационарности
-        for column in data.columns:
-            print(f'Проверка стационарности для {column}:')
-            result = check_stationarity(data[column])
-            print(result)
+    :param time_series: Pandas Series
+    :param lags: Количество лагов
+    """
+    try:
+        fig, axes = plt.subplots(1, 2, figsize=(16, 4))
 
-        # Декомпозиция для первого столбца данных
-        first_column = data.columns[0]
-        decompose_time_series(data[first_column])
+        plot_acf(time_series, ax=axes[0], lags=lags)
+        axes[0].set_title('Автокорреляционная функция (ACF)')
+
+        plot_pacf(time_series, ax=axes[1], lags=lags, method='ywm')
+        axes[1].set_title('Частичная автокорреляционная функция (PACF)')
+
+        plt.tight_layout()
+        plt.show()
+    except Exception as e:
+        print(f"Ошибка построения ACF/PACF: {e}")
