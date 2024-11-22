@@ -1,13 +1,15 @@
-import flet as ft
-import time 
-from utils.Buttons import Button
-from pathlib import Path 
-from flet_navigator import *
+import flet as ft # Фреймворк для создания графического приложения
+import time # Для работы со временем
+from utils.Buttons import Button # Шаблон кнопок
+from pathlib import Path # Для работы с файлами
+from flet_navigator import * # Дополнение для более удобной навигации между страницами
 
 
 @route('/kran_15')
 def kran_15(pg: PageData) -> None:
     
+    pg.navigator.navigator_animation = NavigatorAnimation(NavigatorAnimation.FADE)
+
     # Очистка списка выбранных файлов
     def clear_files(e) -> None:
         sel_files.clear()
@@ -50,20 +52,19 @@ def kran_15(pg: PageData) -> None:
             )  
         
         # Выводим информацию о всех файлах на экран
-        sel_files_names.update()
         btn_clear_files.disabled=True
         btn_calculate.disabled = True
-        btn_calculate.update()
-        btn_clear_files.update()
+        btn_go_home.disabled = True
+        pg.page.update()
         time.sleep(2)
         
         # Спустя 2 секунду оставляем на экране список, состоящий только из валидных файлов
         btn_clear_files.disabled=False
-        btn_calculate.disabled = False
-        btn_clear_files.update()
-        btn_calculate.update()
+        btn_go_home.disabled = False
+        if sel_files:
+            btn_calculate.disabled = False
         sel_files_names.content.controls = tmp
-        sel_files_names.update()
+        pg.page.update()
     
     # Выбор файла/файлов
     def pick_files(e: ft.FilePickerResultEvent) -> None:
@@ -107,6 +108,12 @@ def kran_15(pg: PageData) -> None:
 
             sel_files_names.update() # Обновляем список на экране
 
+    btn_go_home = ft.IconButton(
+        icon=ft.icons.HOME,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
+    )
     # Настройки страницы
     pg.page.title = 'Kran_15'
     pg.page.window.width = 1000
@@ -129,14 +136,7 @@ def kran_15(pg: PageData) -> None:
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
-        actions=[
-            ft.IconButton(
-                icon=ft.icons.HOME,
-                icon_color=ft.colors.WHITE,
-                icon_size=52,
-                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-            )
-        ]
+        actions=[btn_go_home]
     )
     
     # Объект для обработки выбора файла/файлов
@@ -158,7 +158,6 @@ def kran_15(pg: PageData) -> None:
     )
 
     # Создание кнопок для главной страницы
-    btn_go_home = Button(val='На главную', page=pg.page, icon_name=ft.icons.HOME).create_btn()
     btn_pick_files = Button(val='Выбрать файл', page=pg.page, icon_name=ft.icons.FOLDER).create_btn()
     btn_calculate = Button(val='Произвести расчет', page=pg.page, icon_name=ft.icons.PLAY_ARROW).create_btn()
     btn_clear_files = ft.ElevatedButton(
@@ -181,7 +180,6 @@ def kran_15(pg: PageData) -> None:
     btn_calculate.disabled = True
 
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
-    btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
     btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_15', page=pg.page, args=sel_files)
     btn_clear_files.on_click = clear_files

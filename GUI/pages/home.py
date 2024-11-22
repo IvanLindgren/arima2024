@@ -2,11 +2,11 @@ import flet as ft # Фреймворк для создания графичес�
 from utils.Buttons import Button # Шаблон кнопок
 from utils.Banner_text import banner_text # Текст баннера
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
+from flet_restyle import *
 
 
 @route('/')
 def home(pg:PageData) -> None:
-    
     # Открытие информационного банера
     def open_banner(e) -> None:
         pg.page.open(banner)

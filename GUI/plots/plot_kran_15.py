@@ -1,13 +1,11 @@
-import flet as ft 
-import matplotlib
-import time
-import sys
-sys.path.append('C:/Users/user/Desktop/arima2024')
-from flet_navigator import *
-from flet.matplotlib_chart import MatplotlibChart
-from Kran_15.Kran_15 import get_plots_kran_15
-matplotlib.use("svg")
-matplotlib.use('agg')
+import flet as ft # Фреймворк для создания графического приложения
+import matplotlib # Для визуализации данных с помощью графиков 
+import time # Для работы со временем
+import sys # Для корректной работы иморта файлов
+from flet_navigator import * # Дополнение для более удобной навигации между страницами
+from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
+from Kran_15.Kran_15 import get_plots_kran_15 # Функция, которая возвращает хеш - таблицу с графиками и заголовками
+matplotlib.use("svg") # Для корректного отображения графиков
 
 
 @route('/plot_kran_15')
@@ -27,7 +25,10 @@ def plot_kran_15(pg: PageData) -> None:
     
     # Функция сохранения текущего графика в формате 'выбранная папка'/'название графика'.png
     def save(e: ft.FilePickerResultEvent) -> None:
-        cur_plot.content.figure.savefig(f"{e.path}/{plot_names[plot_figs.index(cur_plot.content)]}.png") 
+        try:
+            cur_plot.content.figure.savefig(f"{e.path}/{plot_names[plot_figs.index(cur_plot.content)]}.png") 
+        except:
+            pass
         
     # Перейти на следующий график
     def next_plot(e) -> None:
@@ -46,6 +47,16 @@ def plot_kran_15(pg: PageData) -> None:
             cur_plot_title.value = plot_names[cur_index - 1]
         cur_plot.update()
         cur_plot_title.update()
+
+    def go_home(e) -> None:
+        plot_figs.clear()
+        plot_names.clear()
+        cur_plot.content = None
+        cur_plot_title.value = None
+        pg.page.update()
+        time.sleep(0.01)
+        pg.navigator.navigate('/', page=pg.page)
+
 
     # Настройки окна программы
     pg.page.title = 'Кран 15 (графики)'
@@ -71,6 +82,13 @@ def plot_kran_15(pg: PageData) -> None:
         icon_size=52,
         on_click= lambda _: file_picker.get_directory_path()
     )
+
+    btn_go_home = ft.IconButton(
+        icon=ft.icons.HOME,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click=go_home
+    )
     
     # Верхняя панель приложенияы
     pg.page.appbar = ft.AppBar(
@@ -78,15 +96,7 @@ def plot_kran_15(pg: PageData) -> None:
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
-        actions=[
-            ft.IconButton(
-                icon=ft.icons.HOME,
-                icon_color=ft.colors.WHITE,
-                icon_size=52,
-                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-            ),
-            btn_save
-        ]
+        actions=[btn_go_home, btn_save]
     )
 
     # Объект для обработки выбора файла/файлов
@@ -120,8 +130,6 @@ def plot_kran_15(pg: PageData) -> None:
         color=ft.colors.INDIGO_700,
         shape=ft.RoundedRectangleBorder(radius=20)
     )
-
-    
 
     # Добавляем все созданные объекты на страницу
     all_content = ft.Column(
