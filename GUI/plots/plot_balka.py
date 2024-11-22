@@ -1,35 +1,62 @@
-import flet as ft 
-import matplotlib
-import time
-from utils.Buttons import Button
-from flet_navigator import *
-from flet.matplotlib_chart import MatplotlibChart
-from plots.test_plot import plot, save_plot
-matplotlib.use("svg")
+import flet as ft # Фреймворк для создания графического приложения
+import matplotlib # Для визуализации данных с помощью графиков 
+import time # Для работы со временем
+import sys # Для корректной работы иморта файлов
+from flet_navigator import * # Дополнение для более удобной навигации между страницами
+from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
+from Kran_15.Kran_15 import get_plots_kran_15 # Функция, которая возвращает хеш - таблицу с графиками и заголовками
+matplotlib.use("svg") # Для корректного отображения графиков
 
 
 @route('/plot_balka')
 def plot_balka(pg: PageData) -> None:
     
-    # Хэш-таблица с выбранными файлами
-    print(pg.arguments)
+    # Хеш-таблица с файлами, которые выбрал пользователь на предыдущей странице
+    sel_files = pg.arguments
     
-    def save(e: ft.FilePickerResultEvent):
-        save_plot(figure=cur_plot.content.figure, path=e.path, plot_name='График 1.png')
+    # Создадим отдельные списки для имен файлов и путей к ним
+    pathes = list(sel_files.values())
+    names = list(sel_files.keys())
+
+    # Если длина хеш-таблицы 1, значит был передан только 1 файл, поэтому списки превращаются в строки
+    if len(sel_files) == 1:
+        pathes = pathes[0]
+        names = names[0]
     
+    # Функция сохранения текущего графика в формате 'выбранная папка'/'название графика'.png
+    def save(e: ft.FilePickerResultEvent) -> None:
+        try:
+            cur_plot.content.figure.savefig(f"{e.path}/{plot_names[plot_figs.index(cur_plot.content)]}.png") 
+        except:
+            pass
+        
     # Перейти на следующий график
     def next_plot(e) -> None:
-        cur_index = plots.index(cur_plot.content)
-        if cur_index < 6:
-            cur_plot.content = plots[cur_index + 1]
+        cur_index = plot_figs.index(cur_plot.content)
+        if cur_index < len(plot_figs) - 1:
+            cur_plot.content = plot_figs[cur_index + 1]
+            cur_plot_title.value = plot_names[cur_index + 1]
         cur_plot.update()
+        cur_plot_title.update()
 
     # Перейти на предыдущий график
     def prev_plot(e) -> None:
-        cur_index = plots.index(cur_plot.content)
-        if cur_index > 1:
-            cur_plot.content = plots[cur_index - 1]
+        cur_index = plot_figs.index(cur_plot.content)
+        if cur_index >= 1:
+            cur_plot.content = plot_figs[cur_index - 1]
+            cur_plot_title.value = plot_names[cur_index - 1]
         cur_plot.update()
+        cur_plot_title.update()
+
+    def go_home(e) -> None:
+        plot_figs.clear()
+        plot_names.clear()
+        cur_plot.content = None
+        cur_plot_title.value = None
+        pg.page.update()
+        time.sleep(0.01)
+        pg.navigator.navigate('/', page=pg.page)
+
 
     # Настройки окна программы
     pg.page.title = 'Балка (графики)'
@@ -40,38 +67,43 @@ def plot_balka(pg: PageData) -> None:
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
+    # Заголовок текущего графика
+    cur_plot_title = ft.Text(
+        color=ft.colors.WHITE,
+        size=40,
+        width=800,
+        weight=ft.FontWeight.W_700,
+        text_align=ft.TextAlign.CENTER
+    )
+
+    btn_save = ft.IconButton(
+        icon=ft.icons.SAVE,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click= lambda _: file_picker.get_directory_path()
+    )
+
+    btn_go_home = ft.IconButton(
+        icon=ft.icons.HOME,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click=go_home
+    )
+    
+    # Верхняя панель приложенияы
     pg.page.appbar = ft.AppBar(
-        title=ft.Text(
-            value='Графики (Балка)',
-            color=ft.colors.WHITE,
-            size=80,
-            width=800,
-            text_align=ft.TextAlign.CENTER,
-            weight=ft.FontWeight.W_700,
-        ),
+        title=cur_plot_title,
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
-        actions=[
-            ft.IconButton(
-                icon=ft.icons.HOME,
-                icon_color=ft.colors.WHITE,
-                icon_size=52,
-                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-            ),
-            ft.IconButton(
-                icon=ft.icons.SAVE,
-                icon_color=ft.colors.WHITE,
-                icon_size=52,
-                on_click= lambda _: file_picker.get_directory_path()
-                
-            )
-        ]
+        actions=[btn_go_home, btn_save]
     )
 
+    # Объект для обработки выбора файла/файлов
     file_picker = ft.FilePicker(on_result=save)
     pg.page.overlay.append(file_picker)
 
+    # Создадим кнопки - иконки
     btn_next_plot = ft.IconButton(
         icon=ft.icons.ARROW_RIGHT,
         icon_size=40,
@@ -87,16 +119,19 @@ def plot_balka(pg: PageData) -> None:
         tooltip='Предыдущий график'
     )
 
+    # Зададим кнопкам соотвествующие функции
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
     
+    # Объект, поверх которого будут выводиться текущий график
     cur_plot = ft.Card(
         width=800,
-        height=500,
+        height=525,
         color=ft.colors.INDIGO_700,
         shape=ft.RoundedRectangleBorder(radius=20)
     )
-    
+
+    # Добавляем все созданные объекты на страницу
     all_content = ft.Column(
         [
             ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
@@ -105,10 +140,42 @@ def plot_balka(pg: PageData) -> None:
     
     pg.page.add(all_content)
 
+    # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
     
-    plots = [MatplotlibChart(figure=plot(), original_size=True, expand=True) for _ in range(10)]
-    
-    cur_plot.content = plots[0]
-    cur_plot.update()
-   
+    try:
+        # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
+        dict_plots = get_plots_kran_15(path=pathes)
+        
+        # Создадим отдельные списки для графиков и их заголовков 
+        plot_names = []
+        plot_figs = []
+        
+        # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
+        for name, plot in dict_plots.items():
+            if type(plot) == list:
+                for subplot in plot:
+                    plot_figs.append(MatplotlibChart(figure=subplot, original_size=True, expand=True))
+                    plot_names.append(name)
+            else:
+                plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
+                plot_names.append(name)
+        
+        # Выводим текущий график и его заголовок на экран
+        cur_plot.content = plot_figs[0]
+        cur_plot_title.value = plot_names[0]
+        pg.page.appbar.update()
+        cur_plot.update()
+    except:
+        cur_plot.content = ft.Text(
+            value='Ошибка при обработке файла!',
+            color=ft.colors.RED,
+            size=30,
+            italic=True,
+            text_align=ft.TextAlign.CENTER
+        )
+        
+        btn_next_plot.disabled = True
+        btn_prev_plot.disabled = True
+        btn_save.disabled = True
+        pg.page.update()
