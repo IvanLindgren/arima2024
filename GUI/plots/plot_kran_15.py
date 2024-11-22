@@ -49,13 +49,17 @@ def plot_kran_15(pg: PageData) -> None:
         cur_plot_title.update()
 
     def go_home(e) -> None:
-        plot_figs.clear()
-        plot_names.clear()
-        cur_plot.content = None
-        cur_plot_title.value = None
-        pg.page.update()
-        time.sleep(0.01)
-        pg.navigator.navigate('/', page=pg.page)
+        try:
+            plot_figs.clear()
+            plot_names.clear()
+            cur_plot.content = None
+            cur_plot_title.value = None
+            pg.page.update()
+            time.sleep(0.01)
+        except:
+            pass
+        finally:
+            pg.navigator.navigate('/', page=pg.page)
 
 
     # Настройки окна программы

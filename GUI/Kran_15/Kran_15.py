@@ -1,46 +1,44 @@
-import pandas as pd # пандас для работы с датафреймами
-import matplotlib.pyplot as plt # Библиотека для создания визуализаций данных.
-#import warnings # Используется для управления предупреждениями (warnings) в Python.
-import matplotlib.pyplot as plt #Библиотека для создания визуализаций данных.
-import matplotlib.dates as mdates #форматирование,отображение и манипуляция с датами на графиках
-#import numpy as np #Библиотека для численных вычислений.предоставляет поддержку многомерных массивов и матриц
-#from datetime import datetime# Модуль для работы с датами и временем.
+import pandas as pd  # Для работы с DataFrame
+import matplotlib.pyplot as plt  # Для визуализации данных
+import matplotlib.dates as mdates  # Форматирование и работа с датами на графиках
+from statsmodels.graphics.tsaplots import plot_acf  # График автокорреляции
+from statsmodels.tsa.seasonal import seasonal_decompose  # Декомпозиция временных рядов
 from matplotlib.figure import Figure
-from pandas.core.interchange.dataframe_protocol import DataFrame
-from statsmodels.graphics.tsaplots import plot_acf   # Функция для построения графика автокорреляционной функции (ACF).
-#from statsmodels.graphics.tsaplots import plot_pacf   # Функция для построения графика частичной автокорреляционной функции (PACF).
-#from sklearn.model_selection import ParameterGrid # Используется для создания сетки параметров для перебора при настройке моделей.
-#from statsmodels.tools.sm_exceptions import ConvergenceWarning #Предупреждение о сходимости.
-#from joblib import Parallel, delayed #для параллельного выполнения кода.
-from statsmodels.tsa.seasonal import seasonal_decompose #функция для декомпозиции временных рядов, сезонную составляющую и остаток
-from pylab import rcParams #параметры для графиков
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
-#from tqdm import tqdm #Библиотека для отображения индикатора прогресса при выполнении итераций в циклах
-#from statsmodels.tsa.arima.model import ARIMA #Библиотека для статистического анализа и построения временных рядов.
-#from scripts.time_series_analysis import load_and_prepare_data, check_stationarity, decompose_time_series
-#from scripts.arima_tuning import tune_arima_model, evaluate_arima_with_best_params
-#from scripts.arima_forecasting import train_and_forecast, suppress_warnings, comparative_analysis
+from pylab import rcParams  # Параметры графиков
+from pathlib import Path
 
 
 def get_plots_kran_15(path: str) -> dict: 
     
+    # Чтение Excel-файла и преобразование в DataFrame
+    def read_excel_to_dataframe(file_path: str = None) -> pd.DataFrame:
+        try:
+            df = pd.read_excel(file_path)
+            df['Datetime'] = pd.to_datetime(df['Дата'], format='%y-%m-%d %H:%M:%S.%f')
+            df.drop(columns=['Дата'], inplace=True)
+            df.set_index('Datetime', inplace=True)
+            df.sort_index(inplace=True)
+            if df is not None:
+                df = normalize_dataframe(df)
+            return df
+        except Exception as e:
+            print(f"Ошибка при чтении Excel файла: {e}")
+            return None
 
-    #             Функция для загрузки и обработки данных из CSV файла
-    
-    def to_dataframe(file_path: str = None, dataframe: DataFrame = None) -> DataFrame:
-        if file_path:
-            try:
-                # Считываем данные из CSV файла
-                dataframe = pd.read_csv(file_path)
+    # Чтение Csv-файла и преобразование в DataFrame
+    def csv_to_dataframe(file_path: str = None) -> pd.DataFrame:
+        try:
+            # Считываем данные из CSV файла
+            dataframe = pd.read_csv(file_path)
 
-                # Объединяем столбцы 'Дата' и 'Время' в один столбец 'Datetime'
-                dataframe['Datetime'] = pd.to_datetime(dataframe['Дата'] + ' ' + dataframe['Время'], format='%y-%m-%d %H:%M:%S.%f')
+            # Объединяем столбцы 'Дата' и 'Время' в один столбец 'Datetime'
+            dataframe['Datetime'] = pd.to_datetime(dataframe['Дата'] + ' ' + dataframe['Время'], format='%y-%m-%d %H:%M:%S.%f')
 
-                # Удаляем ненужные столбцы 'Дата' и 'Время'
-                dataframe.drop(columns=['Дата', 'Время'], inplace=True)
-            except Exception:
-                print("Ошибка при чтении CSV файла")
-                return None
+            # Удаляем ненужные столбцы 'Дата' и 'Время'
+            dataframe.drop(columns=['Дата', 'Время'], inplace=True)
+        except Exception:
+            print("Ошибка при чтении CSV файла")
+            return None
 
         # Если DataFrame уже передан и содержит столбец 'Datetime'
         if dataframe is not None and 'Datetime' in dataframe.columns:
@@ -57,60 +55,59 @@ def get_plots_kran_15(path: str) -> dict:
 
         return dataframe
 
-    #             Функция для построения общего графика
+        
+    # Нормализация индекса DataFrame
+    def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
+        if dataframe is not None:
+            dataframe.index = dataframe.index.normalize()
+        return dataframe
 
-    def create_general_graf(dict_of_frames: dict) -> Figure:
-        # Создаем фигуру и оси для построения графика
+
+    # Построение общего графика
+    def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m") -> Figure:
         fig, axes = plt.subplots(figsize=(12, 8))
+        date_form = mdates.DateFormatter(date_format)
 
-        # Построение графиков для каждого элемента из словаря
         for nameG, graf in dict_of_frames.items():
-            graf.plot(ax=axes, label=nameG)  # Строим график
+            graf.plot(ax=axes, label=nameG)
 
-        # Настройки осей и форматирования
         axes.set_xlabel('Дни')
         axes.xaxis.set_major_formatter(date_form)
         axes.xaxis.set_major_locator(mdates.DayLocator(interval=2))
         axes.grid()
-
-        # Плотная компоновка
+        axes.legend()
         plt.tight_layout()
 
         return fig
 
-    #             Функция для построения сезонных графиков
 
-    def create_seasonal_graf(dict_of_frames: dict) -> list[Figure]:
-        rcParams['figure.figsize'] = 11, 9  # Устанавливаем размер графика
+    # Построение сезонных графиков
+    def create_seasonal_graf(dict_of_frames: dict, period: int = 6) -> list[Figure]:
+        rcParams['figure.figsize'] = 11, 9
         fig_list = []
 
-        # Разложение временного ряда на тренд, сезонность и остатки
         for nameG, graf in dict_of_frames.items():
-            decompose = seasonal_decompose(graf, period=6)
-            fig = decompose.plot()  # Построение графика
+            decompose = seasonal_decompose(graf, period=period)
+            fig = decompose.plot()
             fig.suptitle(nameG, fontsize=25)
-            fig_list.append(fig)  # Сохраняем фигуру в список
+            fig_list.append(fig)
 
         return fig_list
 
-    #             Функция для построения графика скользящего среднего
 
-    def create_moving_average_graf(dict_of_frames: dict) -> list[Figure]:
+    # Построение графика скользящего среднего
+    def create_moving_average_graf(dict_of_frames: dict, window: int = 3, date_format: str = "%d-%m") -> list[Figure]:
         fig_list = []
+        date_form = mdates.DateFormatter(date_format)
 
-        # Построение графика для каждого временного ряда
         for nameG, graf in dict_of_frames.items():
             fig, ax = plt.subplots(figsize=(15, 8))
-
-            # Форматирование осей
             ax.xaxis.set_major_formatter(date_form)
             ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
 
-            # Построение исходного графика и графика скользящего среднего
             ax.plot(graf, label=nameG, color='steelblue')
-            ax.plot(graf.rolling(window=3).mean(), label='Скользящее среднее', color='red')
+            ax.plot(graf.rolling(window=window).mean(), label='Скользящее среднее', color='red')
 
-            # Настройки графика
             ax.set_xlabel('Дни', fontsize=14)
             ax.set_title(nameG, fontsize=16)
             ax.legend(title='', loc='upper left', fontsize=14)
@@ -120,50 +117,45 @@ def get_plots_kran_15(path: str) -> dict:
 
         return fig_list
 
-    #             Функция для построения графика автокорреляции
 
+    # Построение графика автокорреляции
     def create_autocor_graf(dict_of_frames: dict) -> list[Figure]:
         fig_list = []
 
-        # Построение автокорреляционного графика для каждого временного ряда
         for nameG, graf in dict_of_frames.items():
             fig, ax = plt.subplots(figsize=(10, 6))
             plot_acf(graf, ax=ax)
-
-            # Настройки заголовка и компоновки
             ax.set_title(nameG, fontsize=16)
             plt.tight_layout()
-
             fig_list.append(fig)
 
         return fig_list
 
-    #             Создание DataFrame из CSV файла
+    # Загрузка данных из Excel
+    extensions = ['.csv', '.xlsx', '.xlsm', '.xls']
+    if Path(path).suffix not in extensions:
+        print('Неверный формат файла')
+        return None
+    elif Path(path).suffix == '.csv':
+        rz = csv_to_dataframe(file_path=path)
+    else:
+        rz = read_excel_to_dataframe(file_path=path)
 
-    # Загрузка данных из CSV файла
-    rz = to_dataframe(file_path=path)
+    # Устанавливаем формат даты для графиков как "день-месяц"
+    date_form = "%d-%m"
 
     # Словарь для хранения всех графиков
     allGr = {}
 
-    # Устанавливаем формат даты для графиков как "день-месяц"
-    date_form = mdates.DateFormatter("%d-%m")
-
     # Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
     for rez, group in rz.groupby('Результат'):
-        # Группируем данные по дням и считаем количество записей
         rez_counts = group.groupby(pd.Grouper(freq='D')).size()
 
-        # Убираем двоеточие в конце, если оно есть
-        if rez.endswith(':'):
-            rez = rez[:-1]
+        if ':' in rez:
+            rez = rez[:rez.find(':')]
 
-        # Создаем DataFrame из результатов и сохраняем его в словарь
         rez_df = rez_counts.to_frame(name=rez)
-        allGr[rez] = to_dataframe(dataframe=rez_df)
-
-    # Устанавливаем формат даты для графиков
-    date_form = mdates.DateFormatter("%d-%m")
+        allGr[rez] = rez_df
 
     dict_plots_kran_15 = {}
     dict_plots_kran_15['Общий график'] = create_general_graf(allGr)
