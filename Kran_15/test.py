@@ -1,89 +1,151 @@
 import pandas as pd # пандас для работы с датафреймами
-import matplotlib.pyplot as plt # Библиотека для создания визуализаций данных.
-import warnings # Используется для управления предупреждениями (warnings) в Python.
 import matplotlib.pyplot as plt #Библиотека для создания визуализаций данных.
 import matplotlib.dates as mdates #форматирование,отображение и манипуляция с датами на графиках
-import numpy as np #Библиотека для численных вычислений.предоставляет поддержку многомерных массивов и матриц
-from datetime import datetime# Модуль для работы с датами и временем.
+from matplotlib.figure import Figure
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from statsmodels.graphics.tsaplots import plot_acf   # Функция для построения графика автокорреляционной функции (ACF).
-from statsmodels.graphics.tsaplots import plot_pacf   # Функция для построения графика частичной автокорреляционной функции (PACF).
-from sklearn.model_selection import ParameterGrid # Используется для создания сетки параметров для перебора при настройке моделей.
-from statsmodels.tools.sm_exceptions import ConvergenceWarning #Предупреждение о сходимости.
-from joblib import Parallel, delayed #для параллельного выполнения кода.
 from statsmodels.tsa.seasonal import seasonal_decompose #функция для декомпозиции временных рядов, сезонную составляющую и остаток
 from pylab import rcParams #параметры для графиков
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
-from tqdm import tqdm #Библиотека для отображения индикатора прогресса при выполнении итераций в циклах
-from statsmodels.tsa.arima.model import ARIMA #Библиотека для статистического анализа и построения временных рядов.
+import openpyxl
 
-# Код для разделения на разные файлы для REZ ////////////////////////////////////////
+def to_dataframe(file_path: str = None, dataframe: DataFrame = None) -> pd.DataFrame:
+    if file_path:
+        try:
+            # Чтение данных из Excel
+            dataframe = pd.read_excel(file_path)
+
+            # Преобразование столбца 'Дата' в datetime
+            dataframe['Datetime'] = pd.to_datetime(dataframe['Дата'], format='%y-%m-%d %H:%M:%S.%f')
+
+            # Удаление столбца 'Дата'
+            dataframe.drop(columns=['Дата'], inplace=True)
+
+        except Exception:
+            print("Ошибка при чтении exel файла")
+            return None
+
+        # Если DataFrame уже передан и содержит столбец 'Datetime'
+        if dataframe is not None and 'Datetime' in dataframe.columns:
+            # Преобразуем столбец 'Datetime' в тип datetime и устанавливаем его в качестве индекса
+            dataframe['Datetime'] = pd.to_datetime(dataframe['Datetime'])
+            dataframe.set_index('Datetime', inplace=True)
+
+        # Сортируем DataFrame по индексу (дате)
+        dataframe.sort_index(inplace=True)
+
+        # Нормализуем индекс, оставляя только дату (без времени)
+        if dataframe is not None:
+            dataframe.index = dataframe.index.normalize()
 
 
-def csv_to_dataframe(file_path: str) -> DataFrame:
-    # Считываем данные из CSV
-    dataframe = pd.read_csv(file_path)
-
-    if  not 'Datetime' in dataframe:
-        # Объединяем столбцы 'Дата' и 'Время' в один столбец 'Datetime'
-        dataframe['Datetime'] = pd.to_datetime(dataframe['Дата'] + ' ' + dataframe['Время'], format='%y-%m-%d %H:%M:%S.%f')
-
-        # Удаляем столбцы 'Дата' и 'Время', т.к. теперь мы их объединили в один 'Datetime'
-        dataframe.drop(columns=['Дата', 'Время'], inplace=True)
-
-    else:
-        dataframe['Datetime'] = pd.to_datetime(dataframe['Datetime'])
-
-    # Устанавливаем 'Datetime' как индекс
-    dataframe.set_index('Datetime', inplace=True)
-
-    # Сортируем DataFrame по индексу (по времени)
-    dataframe.sort_index(inplace=True)
-
-    # Преобразование индекса в формат времени только по дням 11111
-    dataframe.index = dataframe.index.map(lambda x: x.replace(hour=0, minute=0, second=0, microsecond=0))
-
-    return dataframe
+        return dataframe
 
 
-#создаем DataFrame
-rz = csv_to_dataframe('Кран/Rez/Rez_Month.csv')
 
-# Сохранение данных в отдельные CSV файлы для каждого статуса
+
+#             Функция для построения общего графика
+
+def create_general_graf(dict_of_frames: dict) -> Figure:
+    # Создаем фигуру и оси для построения графика
+    fig, axes = plt.subplots(figsize=(12, 8))
+
+    # Построение графиков для каждого элемента из словаря
+    for nameG, graf in dict_of_frames.items():
+        graf.plot(ax=axes, label=nameG)  # Строим график
+
+    # Настройки осей и форматирования
+    axes.set_xlabel('Дни')
+    axes.xaxis.set_major_formatter(date_form)
+    axes.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+    axes.grid()
+
+    # Плотная компоновка
+    plt.tight_layout()
+
+    return fig
+
+#             Функция для построения сезонных графиков
+
+def create_seasonal_graf(dict_of_frames: dict) -> list[Figure]:
+    rcParams['figure.figsize'] = 11, 9  # Устанавливаем размер графика
+    fig_list = []
+
+    # Разложение временного ряда на тренд, сезонность и остатки
+    for nameG, graf in dict_of_frames.items():
+        decompose = seasonal_decompose(graf, period=6)
+        fig = decompose.plot()  # Построение графика
+        fig.suptitle(nameG, fontsize=25)
+        fig_list.append(fig)  # Сохраняем фигуру в список
+
+    return fig_list
+
+#             Функция для построения графика скользящего среднего
+
+def create_moving_average_graf(dict_of_frames: dict) -> list[Figure]:
+    fig_list = []
+
+    # Построение графика для каждого временного ряда
+    for nameG, graf in dict_of_frames.items():
+        fig, ax = plt.subplots(figsize=(15, 8))
+
+        # Форматирование осей
+        ax.xaxis.set_major_formatter(date_form)
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+
+        # Построение исходного графика и графика скользящего среднего
+        ax.plot(graf, label=nameG, color='steelblue')
+        ax.plot(graf.rolling(window=3).mean(), label='Скользящее среднее', color='red')
+
+        # Настройки графика
+        ax.set_xlabel('Дни', fontsize=14)
+        ax.set_title(nameG, fontsize=16)
+        ax.legend(title='', loc='upper left', fontsize=14)
+
+        fig.tight_layout()
+        fig_list.append(fig)
+
+    return fig_list
+
+#             Функция для построения графика автокорреляции
+
+def create_autocor_graf(dict_of_frames: dict) -> list[Figure]:
+    fig_list = []
+
+    # Построение автокорреляционного графика для каждого временного ряда
+    for nameG, graf in dict_of_frames.items():
+        fig, ax = plt.subplots(figsize=(10, 6))
+        plot_acf(graf, ax=ax)
+
+        # Настройки заголовка и компоновки
+        ax.set_title(nameG, fontsize=16)
+        plt.tight_layout()
+
+        fig_list.append(fig)
+
+    return fig_list
+
+#             Создание DataFrame из CSV файла
+
+# Загрузка данных из CSV файла
+rz = to_dataframe(file_path='Кран/Rez/rez_month.xlsx')
+# Словарь для хранения всех графиков
+allGr = {}
+
+# Устанавливаем формат даты для графиков как "день-месяц"
+date_form = mdates.DateFormatter("%d-%m")
+
+# Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
 for rez, group in rz.groupby('Результат'):
-    #По какой переменной будет подсчет(по дням = D)
-    rez_counts = group.groupby(pd.Grouper(freq='D')).size()# Группируем данные по дням и подсчитываем количество записей в столбце 'ID'
-    rez_counts.to_csv(f'Кран/Rez/{rez}_Month.csv', header=[rez], index=True)#Запись файлов в папку
+    # Группируем данные по дням и считаем количество записей
+    rez_counts = group.groupby(pd.Grouper(freq='D')).size()
 
-# Чтение данных со всех файлов ///////////////////////////////////////////
+    # Убираем двоеточие в конце, если оно есть
+    if ':' in rez:
+        rez = rez[:rez.find(':')]
 
-#создаем DataFrame
-ID = csv_to_dataframe('Кран/ID_Month.csv')
+    # Создаем DataFrame из результатов и сохраняем его в словарь
+    rez_df = rez_counts.to_frame(name=rez)
+    # allGr[rez] = to_dataframe(dataframe=rez_df)
+    allGr[rez] = rez_df
 
-# Группируем данные по дням и подсчитываем количество записей в столбце 'ID'
-ID = ID['ID'].groupby(pd.Grouper(freq='D')).count()
 
-
-WAR = csv_to_dataframe('Кран/Rez/WAR_Month.csv')  # Считываем данные из CSV-файлов
-
-SUC = csv_to_dataframe('Кран/Rez/SUC_Month.csv') # Считываем данные из CSV-файлов
-
-S_OK = csv_to_dataframe('Кран/Rez/S_OK_Month.csv') # Считываем данные из CSV-файлов
-
-ERR = csv_to_dataframe('Кран/Rez/ERR_Month.csv') # Считываем данные из CSV-файлов
-
-# Выбор кол-ва данных для прогноза в % , заполнение массивов данными ///////////////////////////////////////////
-
-percentsize=1 #100%
-
-#массив для всех файлов
-allGr = [
-    ID[:int(len(ID) * percentsize)],
-    WAR[:int(len(WAR) * percentsize)],
-    SUC[:int(len(SUC) * percentsize)],
-    S_OK[:int(len(S_OK) * percentsize)],
-    ERR[:int(len(ERR) * percentsize)]
-]
-#массив имен для всех файлов
-for i in allGr:
-    print(i)
