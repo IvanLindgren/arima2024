@@ -6,6 +6,9 @@ from statsmodels.tsa.seasonal import seasonal_decompose  # Декомпозиц�
 from matplotlib.figure import Figure
 from pylab import rcParams  # Параметры графиков
 from pathlib import Path
+from scripts.time_series_analysis import check_stationarity, decompose_time_series
+from scripts.arima_tuning import tune_arima_with_grid_search
+from scripts.arima_forecasting import train_and_forecast_with_metrics
 
 
 def get_plots_kran_15(path: str) -> dict: 
@@ -158,9 +161,26 @@ def get_plots_kran_15(path: str) -> dict:
         allGr[rez] = rez_df
 
     dict_plots_kran_15 = {}
+    
+    for name, time_series in allGr.items():
+        
+        print(time_series)
+        # Проверка стационарности и декомпозиция
+        #stationarity_result = check_stationarity(time_series['Counts'])
+        #print(stationarity_result)
+
+        '''# Подбор параметров модели и расчет метрик
+        best_order, metrics = tune_arima_with_grid_search(time_series['Counts'])
+
+        # Обучение модели и прогнозирование
+        forecast, dict_plots_kran_15[f"Анализ для {name}"] = train_and_forecast_with_metrics(time_series['Counts'], order=best_order)'''
+        
+
+    
     dict_plots_kran_15['Общий график'] = create_general_graf(allGr)
     dict_plots_kran_15['Сезонные графики'] = create_seasonal_graf(allGr)
     dict_plots_kran_15['Построение скользящего среднего'] = create_moving_average_graf(allGr)
     dict_plots_kran_15['График автокорелляции'] = create_autocor_graf(allGr)
+    
 
     return dict_plots_kran_15

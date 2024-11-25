@@ -4,7 +4,9 @@ import time # Для работы со временем
 import sys # Для корректной работы иморта файлов
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from Kran_15.Kran_15 import get_plots_kran_15 # Функция, которая возвращает хеш - таблицу с графиками и заголовками
+from Kran_15.Kran_15 import get_plots_kran_15 # Функция, которая возвращает хеш - таблицу с графиками и заголовкам
+#from Kran_15.Kran_15_Denis import get_plots_kran_15
+from Kran_15.Kran_15_Denis_Test import get_kran_15_rez_data
 matplotlib.use("svg") # Для корректного отображения графиков
 
 
@@ -147,9 +149,12 @@ def plot_kran_15(pg: PageData) -> None:
     # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
     
+    
+    
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        dict_plots = get_plots_kran_15(path=pathes)
+        data = get_kran_15_rez_data(file_path=pathes)
+        dict_plots = data['plots']
         
         # Создадим отдельные списки для графиков и их заголовков 
         plot_names = []
@@ -164,6 +169,13 @@ def plot_kran_15(pg: PageData) -> None:
             else:
                 plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
                 plot_names.append(name)
+
+        # Работаем со словарем 'forecasts':
+        forecasts = data['forecasts']
+
+        for name, name_data in forecasts.items():
+            plot_figs.append(MatplotlibChart(figure=name_data['plot'], original_size=True, expand=True))
+            plot_names.append('Прогноз')
         
         # Выводим текущий график и его заголовок на экран
         cur_plot.content = plot_figs[0]
