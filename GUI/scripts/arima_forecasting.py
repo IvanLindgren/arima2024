@@ -32,7 +32,7 @@ def train_and_forecast_with_metrics(time_series, order, forecast_period=14, freq
         forecast = model_fit.forecast(steps=forecast_period)
 
         # Построение прогноза
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(12, 8))
         ax.plot(time_series, label="Исходные данные")
         last_date = time_series.index[-1]
         forecast_index = pd.date_range(start=last_date + timedelta(days=1), periods=forecast_period, freq=freq)

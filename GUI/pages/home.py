@@ -51,7 +51,7 @@ def home(pg:PageData) -> None:
 
     # Баннер
     banner = ft.Banner(
-        bgcolor=ft.colors.INDIGO_500,
+        bgcolor=ft.colors.INDIGO_700,
         content=ft.Text(
             value=banner_text,
             size=25,
@@ -70,25 +70,41 @@ def home(pg:PageData) -> None:
 
     # Создание кнопок для главной страницы
     btn_Kran_15 = Button(val='Кран 15', page=pg.page, icon_name=ft.icons.BUILD).create_btn()
+    btn_Kran_17 = Button(val='Кран 17', page=pg.page, icon_name=ft.icons.BUILD).create_btn()
     btn_Kran_15_rez = Button(val='Rez', page=pg.page, height=52).create_popup_button()
     btn_Kran_15_state = Button(val='State', page=pg.page, height=52).create_popup_button()
-    btn_Kran_17 = Button(val='Кран 17', page=pg.page, icon_name=ft.icons.BUILD).create_btn()
+    btn_Kran_17_rez = Button(val='Rez', page=pg.page, height=52).create_popup_button()
+    btn_Kran_17_state = Button(val='State', page=pg.page, height=52).create_popup_button()
     btn_Balka = Button(val='Балка', page=pg.page, icon_name=ft.icons.DASHBOARD).create_btn()
     btn_Scaner= Button(val='Сканер', page=pg.page, icon_name=ft.icons.ADF_SCANNER).create_btn()
     
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
-    btn_Kran_15_rez.on_click = lambda _: pg.navigator.navigate('/kran_15', page=pg.page)
-    btn_Kran_17.on_click = lambda _: pg.navigator.navigate('/kran_17', page=pg.page)
+    btn_Kran_15_rez.on_click = lambda _: pg.navigator.navigate('/kran_15_rez', page=pg.page)
+    btn_Kran_15_state.on_click = lambda _: pg.navigator.navigate('/kran_15_state', page=pg.page)
+    btn_Kran_17_rez.on_click = lambda _: pg.navigator.navigate('/kran_17_rez', page=pg.page)
+    btn_Kran_17_state.on_click = None
     btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
     btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
 
     btn_Kran_15.disabled = True
-    
+    btn_Kran_17.disabled = True
+
     menu_btn_kran_15 = ft.PopupMenuButton(
         content=btn_Kran_15,
         items=[
             btn_Kran_15_rez,
             btn_Kran_15_state
+        ],
+        bgcolor=ft.colors.INDIGO_500,
+        menu_position=ft.PopupMenuPosition.UNDER,
+        tooltip='Выберите тип'
+    )
+
+    menu_btn_kran_17 = ft.PopupMenuButton(
+        content=btn_Kran_17,
+        items=[
+            btn_Kran_17_rez,
+            btn_Kran_17_state
         ],
         bgcolor=ft.colors.INDIGO_500,
         menu_position=ft.PopupMenuPosition.UNDER,
@@ -100,7 +116,7 @@ def home(pg:PageData) -> None:
         ft.Column(
             [
                 menu_btn_kran_15,
-                btn_Kran_17,
+                menu_btn_kran_17,
                 btn_Balka,
                 btn_Scaner,
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER

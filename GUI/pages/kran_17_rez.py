@@ -1,17 +1,13 @@
-import flet as ft # Фреймворк для создания графического приложения
-import time # Для работы со временем
-import warnings
-from utils.Buttons import Button # Шаблон кнопок
-from pathlib import Path # Для работы с файлами
-from flet_navigator import * # Дополнение для более удобной навигации между страницами
-warnings.filterwarnings('ignore')
+import flet as ft
+import time 
+from utils.Buttons import Button
+from pathlib import Path 
+from flet_navigator import *
 
 
-@route('/kran_15')
-def kran_15(pg: PageData) -> None:
+@route('/kran_17_rez')
+def kran_17_rez(pg: PageData) -> None:
     
-    pg.navigator.navigator_animation = NavigatorAnimation(NavigatorAnimation.FADE)
-
     # Очистка списка выбранных файлов
     def clear_files(e) -> None:
         sel_files.clear()
@@ -54,19 +50,16 @@ def kran_15(pg: PageData) -> None:
             )  
         
         # Выводим информацию о всех файлах на экран
+        sel_files_names.update()
         btn_clear_files.disabled=True
-        btn_calculate.disabled = True
-        btn_go_home.disabled = True
-        pg.page.update()
+        btn_clear_files.update()
         time.sleep(2)
         
         # Спустя 2 секунду оставляем на экране список, состоящий только из валидных файлов
         btn_clear_files.disabled=False
-        btn_go_home.disabled = False
-        if sel_files:
-            btn_calculate.disabled = False
+        btn_clear_files.update()
         sel_files_names.content.controls = tmp
-        pg.page.update()
+        sel_files_names.update()
     
     # Выбор файла/файлов
     def pick_files(e: ft.FilePickerResultEvent) -> None:
@@ -110,14 +103,8 @@ def kran_15(pg: PageData) -> None:
 
             sel_files_names.update() # Обновляем список на экране
 
-    btn_go_home = ft.IconButton(
-        icon=ft.icons.HOME,
-        icon_color=ft.colors.WHITE,
-        icon_size=52,
-        on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-    )
     # Настройки страницы
-    pg.page.title = 'Kran_15'
+    pg.page.title = 'Kran_17'
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
@@ -128,7 +115,7 @@ def kran_15(pg: PageData) -> None:
     #  Верхняя панель приложения
     pg.page.appbar = ft.AppBar(
         title=ft.Text(
-            value='Кран 15',
+            value='Кран 17',
             color=ft.colors.WHITE,
             size=80,
             width=400,
@@ -138,7 +125,14 @@ def kran_15(pg: PageData) -> None:
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
-        actions=[btn_go_home]
+        actions=[
+            ft.IconButton(
+                icon=ft.icons.HOME,
+                icon_color=ft.colors.WHITE,
+                icon_size=52,
+                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
+            )
+        ]
     )
     
     # Объект для обработки выбора файла/файлов
@@ -160,6 +154,7 @@ def kran_15(pg: PageData) -> None:
     )
 
     # Создание кнопок для главной страницы
+    btn_go_home = Button(val='На главную', page=pg.page, icon_name=ft.icons.HOME).create_btn()
     btn_pick_files = Button(val='Выбрать файл', page=pg.page, icon_name=ft.icons.FOLDER).create_btn()
     btn_calculate = Button(val='Произвести расчет', page=pg.page, icon_name=ft.icons.PLAY_ARROW).create_btn()
     btn_clear_files = ft.ElevatedButton(
@@ -182,8 +177,9 @@ def kran_15(pg: PageData) -> None:
     btn_calculate.disabled = True
 
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
+    btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
-    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_15', page=pg.page, args=sel_files)
+    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_kran_17', page=pg.page, args=sel_files)
     btn_clear_files.on_click = clear_files
 
     # Объединяем в один объект колонку с именами выбранных файлов и кнопку "очистить список"

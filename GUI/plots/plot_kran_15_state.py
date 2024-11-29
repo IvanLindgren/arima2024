@@ -2,14 +2,15 @@ import flet as ft # Фреймворк для создания графичес�
 import matplotlib # Для визуализации данных с помощью графиков 
 import time # Для работы со временем
 import sys # Для корректной работы иморта файлов
+import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from Kran_15.Kran_15 import get_plots_kran_15 # Функция, которая возвращает хеш - таблицу с графиками и заголовками
+from Kran_15.Kran_15_Rez import get_kran_15_rez_data
 matplotlib.use("svg") # Для корректного отображения графиков
+warnings.filterwarnings('ignore')
 
-
-@route('/plot_kran_17')
-def plot_kran_17(pg: PageData) -> None:
+@route('/plot_kran_15_state')
+def plot_kran_15_state(pg: PageData) -> None:
     
     # Хеш-таблица с файлами, которые выбрал пользователь на предыдущей странице
     sel_files = pg.arguments
@@ -23,6 +24,16 @@ def plot_kran_17(pg: PageData) -> None:
         pathes = pathes[0]
         names = names[0]
     
+    # Открытие информационного банера
+    def open_banner(e) -> None:
+        pg.page.open(banner)
+        pg.page.update()
+
+    # Закрытие информационного баннера
+    def close_banner(e) -> None:
+        pg.page.close(banner)
+        pg.page.update()
+
     # Функция сохранения текущего графика в формате 'выбранная папка'/'название графика'.png
     def save(e: ft.FilePickerResultEvent) -> None:
         try:
@@ -33,33 +44,53 @@ def plot_kran_17(pg: PageData) -> None:
     # Перейти на следующий график
     def next_plot(e) -> None:
         cur_index = plot_figs.index(cur_plot.content)
+        btn_info.disabled = True
         if cur_index < len(plot_figs) - 1:
             cur_plot.content = plot_figs[cur_index + 1]
             cur_plot_title.value = plot_names[cur_index + 1]
-        cur_plot.update()
-        cur_plot_title.update()
+            if cur_index + 1 >= 13:
+                btn_info.disabled = False
+                banner.content = ft.Text(
+                    value=metrics[cur_index + 1 - 13],
+                    size=25,
+                    color=ft.colors.WHITE,
+                    weight=ft.FontWeight.W_300
+                )
+        pg.page.update()
 
     # Перейти на предыдущий график
     def prev_plot(e) -> None:
         cur_index = plot_figs.index(cur_plot.content)
+        btn_info.disabled = True
         if cur_index >= 1:
             cur_plot.content = plot_figs[cur_index - 1]
             cur_plot_title.value = plot_names[cur_index - 1]
-        cur_plot.update()
-        cur_plot_title.update()
+            if cur_index - 1 >= 13:
+                btn_info.disabled = False
+                banner.content = ft.Text(
+                    value=metrics[cur_index -1 - 13],
+                    size=25,
+                    color=ft.colors.WHITE,
+                    weight=ft.FontWeight.W_300
+                )
+        pg.page.update()
 
     def go_home(e) -> None:
-        plot_figs.clear()
-        plot_names.clear()
-        cur_plot.content = None
-        cur_plot_title.value = None
-        pg.page.update()
-        time.sleep(0.01)
-        pg.navigator.navigate('/', page=pg.page)
+        try:
+            plot_figs.clear()
+            plot_names.clear()
+            cur_plot.content = None
+            cur_plot_title.value = None
+            pg.page.update()
+            time.sleep(0.01)
+        except:
+            pass
+        finally:
+            pg.navigator.navigate('/', page=pg.page)
 
 
     # Настройки окна программы
-    pg.page.title = 'Кран 17 (графики)'
+    pg.page.title = 'Кран 15 Rez (графики)'
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
@@ -70,7 +101,7 @@ def plot_kran_17(pg: PageData) -> None:
     # Заголовок текущего графика
     cur_plot_title = ft.Text(
         color=ft.colors.WHITE,
-        size=40,
+        size=35,
         width=800,
         weight=ft.FontWeight.W_700,
         text_align=ft.TextAlign.CENTER
@@ -89,6 +120,14 @@ def plot_kran_17(pg: PageData) -> None:
         icon_size=52,
         on_click=go_home
     )
+
+    btn_info = ft.IconButton(
+        icon=ft.icons.INFO,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click=open_banner,
+        disabled=True
+    )
     
     # Верхняя панель приложенияы
     pg.page.appbar = ft.AppBar(
@@ -96,7 +135,25 @@ def plot_kran_17(pg: PageData) -> None:
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
-        actions=[btn_go_home, btn_save]
+        actions=[btn_go_home, btn_save, btn_info]
+    )
+
+    banner = ft.Banner(
+        bgcolor=ft.colors.INDIGO_500,
+        content=ft.Text(
+            value=None,
+            size=25,
+            color=ft.colors.WHITE,
+            weight=ft.FontWeight.W_300
+        ),
+        actions=[
+            ft.TextButton(
+                text="Закрыть", 
+                on_click=close_banner,
+                style=ft.ButtonStyle(color=ft.colors.WHITE)
+            )
+        ],
+        force_actions_below=True
     )
 
     # Объект для обработки выбора файла/файлов
@@ -116,12 +173,14 @@ def plot_kran_17(pg: PageData) -> None:
         icon_size=40,
         bgcolor=ft.colors.INDIGO_700,
         icon_color=ft.colors.WHITE,
-        tooltip='Предыдущий график'
+        tooltip='Предыдущий график',
     )
 
     # Зададим кнопкам соотвествующие функции
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
+    
+    pr = ft.ProgressRing(width=52, height=52, stroke_width=2, color=ft.colors.WHITE)
     
     # Объект, поверх которого будут выводиться текущий график
     cur_plot = ft.Card(
@@ -131,10 +190,24 @@ def plot_kran_17(pg: PageData) -> None:
         shape=ft.RoundedRectangleBorder(radius=20)
     )
 
+    stack = ft.Stack(
+        controls=[
+            cur_plot,
+            ft.Container(
+                content=pr,
+                alignment=ft.alignment.center,  
+            ),
+        ],
+        width=800,
+        height=525,
+    )
+
+    cont = ft.Container(stack)
+
     # Добавляем все созданные объекты на страницу
     all_content = ft.Column(
         [
-            ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
+            ft.Row([btn_prev_plot, cont, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
         ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
     
@@ -145,11 +218,13 @@ def plot_kran_17(pg: PageData) -> None:
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        dict_plots = get_plots_kran_15(path=pathes)
+        data = get_kran_15_rez_data(file_path=pathes)
+        dict_plots = data['plots']
         
         # Создадим отдельные списки для графиков и их заголовков 
         plot_names = []
         plot_figs = []
+        metrics = []
         
         # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
         for name, plot in dict_plots.items():
@@ -160,15 +235,27 @@ def plot_kran_17(pg: PageData) -> None:
             else:
                 plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
                 plot_names.append(name)
-        
+
+        # Работаем со словарем 'forecasts':
+        forecasts = data['forecasts']
+
+        for name, name_data in forecasts.items():
+            plot_figs.append(MatplotlibChart(figure=name_data['plot'], original_size=True, expand=True))
+            plot_names.append('Прогноз')
+            tmp = 'Метрики: '
+            for key, value in name_data['parametrs'].items():
+                tmp += f'{key}: {value} '
+            metrics.append(tmp)
+
         # Выводим текущий график и его заголовок на экран
         cur_plot.content = plot_figs[0]
         cur_plot_title.value = plot_names[0]
-        pg.page.appbar.update()
-        cur_plot.update()
+        pr.disabled = True
+        pr.visible = False
+        pg.page.update()
     except:
         cur_plot.content = ft.Text(
-            value='Ошибка при обработке файла!',
+            value=f'Ошибка при обработке файла!',
             color=ft.colors.RED,
             size=30,
             italic=True,
@@ -178,4 +265,13 @@ def plot_kran_17(pg: PageData) -> None:
         btn_next_plot.disabled = True
         btn_prev_plot.disabled = True
         btn_save.disabled = True
+        pr.disabled = True
+        pr.visible = False
         pg.page.update()
+    
+
+    
+    
+    
+
+   

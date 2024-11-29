@@ -8,8 +8,8 @@ from Kran_15.Kran_15_Rez import get_kran_15_rez_data # Функция, кото�
 matplotlib.use("svg") # Для корректного отображения графиков
 
 
-@route('/plot_scaner')
-def plot_scaner(pg: PageData) -> None:
+@route('/plot_kran_17_rez')
+def plot_kran_17_rez(pg: PageData) -> None:
     
     # Хеш-таблица с файлами, которые выбрал пользователь на предыдущей странице
     sel_files = pg.arguments
@@ -59,7 +59,7 @@ def plot_scaner(pg: PageData) -> None:
 
 
     # Настройки окна программы
-    pg.page.title = 'Сканер (графики)'
+    pg.page.title = 'Кран 17 (графики)'
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
