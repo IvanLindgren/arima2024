@@ -212,13 +212,13 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
     kran_15_state_data = dict()
     
     plots = dict()
-    '''create_general_graf(allGr)
+    create_general_graf(allGr)
     create_seasonal_graf(allGr)
     create_moving_average_graf(allGr)
-    create_autocor_graf(allGr)'''
+    create_autocor_graf(allGr)
     
     forecasts = dict()
-    # Далее выполняем анализ и прогноз для каждого временного ряда
+    '''# Далее выполняем анализ и прогноз для каждого временного ряда
     for name, time_series in allGr.items():
         
         name_data = dict()
@@ -232,17 +232,8 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
         # Обучение модели и прогнозирование
         forecast, metrics, fig = train_and_forecast_with_metrics(time_series[name], order=best_order)
         name_data['plot'] = fig
-        forecasts[name] = name_data
+        forecasts[name] = name_data'''
 
     kran_15_state_data['forecasts'] = forecasts
     kran_15_state_data['plots'] = plots
     return kran_15_state_data
-
-
-pathes = [
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_State_Month',
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_ID_Month',
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_To_Month',
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_From_Month'
-]
-get_kran_15_state_data(pathes)

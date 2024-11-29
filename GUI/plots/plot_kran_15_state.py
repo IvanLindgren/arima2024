@@ -221,12 +221,12 @@ def plot_kran_15_state(pg: PageData) -> None:
     # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
     data = get_kran_15_state_data(file_pathes=pathes)
     dict_plots = data['plots']
-    
+
     # Создадим отдельные списки для графиков и их заголовков 
     plot_names = []
     plot_figs = []
     metrics = []
-    
+
     # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
     for name, plot in dict_plots.items():
         if type(plot) == list:
