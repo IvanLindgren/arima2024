@@ -42,6 +42,7 @@ def train_and_forecast_with_metrics(time_series, order, forecast_period=14, freq
         ax.set_title(f"Прогноз с параметрами ARIMA{order}")
         ax.legend()
         ax.grid()
+        plt.show()
         
 
         # Отображение метрик

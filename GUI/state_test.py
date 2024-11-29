@@ -223,7 +223,7 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
         
         name_data = dict()
         # Проверка стационарности и декомпозиция
-        name_data['stationarity'] = f"Анализ для {name}: {check_stationarity(time_series[name])}"
+        #name_data['stationarity'] = f"Анализ для {name}: {check_stationarity(time_series[name])}"
         
         # Подбор параметров модели и расчет метрик
         best_order, metrics = tune_arima_with_grid_search(time_series[name])
@@ -240,9 +240,9 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
 
 
 pathes = [
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_State_Month',
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_ID_Month',
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_To_Month',
-    'C:/Users/user/Documents/test/LPC_Kran15_Data_From_Month'
+    'C:/Users/user/Documents/test/LPC_Kran15_Data_State_Month.xlsx',
+    'C:/Users/user/Documents/test/LPC_Kran15_Data_ID_Month.xlsx',
+    'C:/Users/user/Documents/test/LPC_Kran15_Data_To_Month.xlsx',
+    'C:/Users/user/Documents/test/LPC_Kran15_Data_From_Month.xlsx'
 ]
 get_kran_15_state_data(pathes)
