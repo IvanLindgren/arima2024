@@ -2,7 +2,6 @@ import flet as ft # Фреймворк для создания графичес�
 from utils.Buttons import Button # Шаблон кнопок
 from utils.Banner_text import banner_text # Текст баннера
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
-from flet_restyle import *
 
 
 @route('/')
@@ -71,24 +70,39 @@ def home(pg:PageData) -> None:
 
     # Создание кнопок для главной страницы
     btn_Kran_15 = Button(val='Кран 15', page=pg.page, icon_name=ft.icons.BUILD).create_btn()
+    btn_Kran_15_rez = Button(val='Rez', page=pg.page, height=52).create_popup_button()
+    btn_Kran_15_state = Button(val='State', page=pg.page, height=52).create_popup_button()
     btn_Kran_17 = Button(val='Кран 17', page=pg.page, icon_name=ft.icons.BUILD).create_btn()
     btn_Balka = Button(val='Балка', page=pg.page, icon_name=ft.icons.DASHBOARD).create_btn()
     btn_Scaner= Button(val='Сканер', page=pg.page, icon_name=ft.icons.ADF_SCANNER).create_btn()
     
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
-    btn_Kran_15.on_click = lambda _: pg.navigator.navigate('/kran_15', page=pg.page)
+    btn_Kran_15_rez.on_click = lambda _: pg.navigator.navigate('/kran_15', page=pg.page)
     btn_Kran_17.on_click = lambda _: pg.navigator.navigate('/kran_17', page=pg.page)
     btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
     btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
 
-     # Добавляем все созданные объекты на страницу
+    btn_Kran_15.disabled = True
+    
+    menu_btn_kran_15 = ft.PopupMenuButton(
+        content=btn_Kran_15,
+        items=[
+            btn_Kran_15_rez,
+            btn_Kran_15_state
+        ],
+        bgcolor=ft.colors.INDIGO_500,
+        menu_position=ft.PopupMenuPosition.UNDER,
+        tooltip='Выберите тип'
+    )
+    
+    # Добавляем все созданные объекты на страницу
     pg.page.add(
         ft.Column(
             [
-                btn_Kran_15,
+                menu_btn_kran_15,
                 btn_Kran_17,
                 btn_Balka,
-                btn_Scaner
+                btn_Scaner,
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
     )

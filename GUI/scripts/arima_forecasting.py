@@ -3,10 +3,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import warnings
+warnings.simplefilter('ignore', UserWarning)
+#warnings.filterwarnings('ignore')
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 from datetime import timedelta
+
 
 
 def display_metrics(metrics):
@@ -25,7 +28,7 @@ def train_and_forecast_with_metrics(time_series, order, forecast_period=14, freq
     """
     try:
         model = ARIMA(time_series, order=order)
-        model_fit = model.fit()
+        model_fit = model.fit(method_kwargs={"warn_convergence": False})
         forecast = model_fit.forecast(steps=forecast_period)
 
         # Построение прогноза
@@ -46,7 +49,7 @@ def train_and_forecast_with_metrics(time_series, order, forecast_period=14, freq
                    'MAE': mean_absolute_error(time_series[-forecast_period:], forecast),
                    'R2': r2_score(time_series[-forecast_period:], forecast),
                    'MAPE': mean_absolute_percentage_error(time_series[-forecast_period:], forecast)}
-        display_metrics(metrics)
+        #display_metrics(metrics)
         return forecast, metrics, fig
     except Exception as e:
         print(f"Ошибка при обучении и прогнозировании: {e}")

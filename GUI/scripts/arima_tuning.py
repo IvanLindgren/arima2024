@@ -2,11 +2,14 @@
 
 import pandas as pd
 import warnings
+#warnings.filterwarnings('ignore')
+warnings.simplefilter('ignore', UserWarning)
 from pmdarima import auto_arima
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 from joblib import Parallel, delayed
+
 
 # Подбор гиперпараметров с использованием сетки поиска
 def tune_arima_with_grid_search(time_series, p_values=range(0, 4), d_values=range(0, 2), q_values=range(0, 4), seasonal_period=None):
@@ -27,7 +30,7 @@ def tune_arima_with_grid_search(time_series, p_values=range(0, 4), d_values=rang
     def evaluate_arima_model(order):
         try:
             model = ARIMA(time_series, order=order)
-            model_fit = model.fit()
+            model_fit = model.fit(method_kwargs={"warn_convergence": False})
             y_pred = model_fit.forecast(steps=14)  # Прогноз на 14 шагов
             mse = mean_squared_error(time_series[-14:], y_pred)
             mae = mean_absolute_error(time_series[-14:], y_pred)

@@ -2,13 +2,14 @@ import flet as ft # Фреймворк для создания графичес�
 import matplotlib # Для визуализации данных с помощью графиков 
 import time # Для работы со временем
 import sys # Для корректной работы иморта файлов
+import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
 from Kran_15.Kran_15 import get_plots_kran_15 # Функция, которая возвращает хеш - таблицу с графиками и заголовкам
 #from Kran_15.Kran_15_Denis import get_plots_kran_15
 from Kran_15.Kran_15_Denis_Test import get_kran_15_rez_data
 matplotlib.use("svg") # Для корректного отображения графиков
-
+warnings.filterwarnings('ignore')
 
 @route('/plot_kran_15')
 def plot_kran_15(pg: PageData) -> None:
@@ -129,6 +130,8 @@ def plot_kran_15(pg: PageData) -> None:
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
     
+    pr = ft.ProgressRing(width=52, height=52, stroke_width=2, color=ft.colors.WHITE)
+    
     # Объект, поверх которого будут выводиться текущий график
     cur_plot = ft.Card(
         width=800,
@@ -137,10 +140,24 @@ def plot_kran_15(pg: PageData) -> None:
         shape=ft.RoundedRectangleBorder(radius=20)
     )
 
+    stack = ft.Stack(
+        controls=[
+            cur_plot,
+            ft.Container(
+                content=pr,
+                alignment=ft.alignment.center,  
+            ),
+        ],
+        width=800,
+        height=525,
+    )
+
+    cont = ft.Container(stack)
+
     # Добавляем все созданные объекты на страницу
     all_content = ft.Column(
         [
-            ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
+            ft.Row([btn_prev_plot, cont, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
         ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
     
@@ -148,8 +165,6 @@ def plot_kran_15(pg: PageData) -> None:
 
     # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
-    
-    
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
@@ -180,8 +195,9 @@ def plot_kran_15(pg: PageData) -> None:
         # Выводим текущий график и его заголовок на экран
         cur_plot.content = plot_figs[0]
         cur_plot_title.value = plot_names[0]
-        pg.page.appbar.update()
-        cur_plot.update()
+        pr.disabled = True
+        pr.visible = False
+        pg.page.update()
     except:
         cur_plot.content = ft.Text(
             value='Ошибка при обработке файла!',
@@ -194,6 +210,8 @@ def plot_kran_15(pg: PageData) -> None:
         btn_next_plot.disabled = True
         btn_prev_plot.disabled = True
         btn_save.disabled = True
+        pr.disabled = True
+        pr.visible = False
         pg.page.update()
     
 

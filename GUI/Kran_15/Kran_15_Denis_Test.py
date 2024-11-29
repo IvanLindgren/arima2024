@@ -1,17 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import warnings
+warnings.filterwarnings('ignore')
 import matplotlib.dates as mdates
-import numpy as np
-from datetime import datetime
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.seasonal import seasonal_decompose
 from pylab import rcParams
 from scripts.time_series_analysis import check_stationarity, decompose_time_series
 from scripts.arima_tuning import tune_arima_with_grid_search
 from scripts.arima_forecasting import train_and_forecast_with_metrics
-import os
-warnings.filterwarnings('ignore')
+
 
 
 def get_kran_15_rez_data(file_path: str) -> dict:
@@ -71,11 +69,18 @@ def get_kran_15_rez_data(file_path: str) -> dict:
 
         return dataframe
 
+    statuses = {
+        1: 'S_OK',
+        0.8: 'SUC',
+        0.5: 'ERR',
+        0.2: 'WAR',
+    }
+    
     # Функция для построения общего графика
     def create_general_graf(dict_of_frames: dict) -> plt.Figure:
         fig, axes = plt.subplots(figsize=(12, 8))
         for nameG, graf in dict_of_frames.items():
-            graf.plot(ax=axes, label=nameG)
+            graf.plot(ax=axes, label=statuses[nameG])
         axes.set_xlabel('Дни')
         axes.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m"))
         axes.xaxis.set_major_locator(mdates.DayLocator(interval=2))
@@ -91,7 +96,7 @@ def get_kran_15_rez_data(file_path: str) -> dict:
         for nameG, graf in dict_of_frames.items():
             decompose = seasonal_decompose(graf, period=6)
             fig = decompose.plot()
-            fig.suptitle(nameG, fontsize=25)
+            fig.suptitle(statuses[nameG], fontsize=25)
             fig_list.append(fig)
         return fig_list
 
@@ -103,10 +108,10 @@ def get_kran_15_rez_data(file_path: str) -> dict:
             fig, ax = plt.subplots(figsize=(15, 8))
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m"))
             ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-            ax.plot(graf, label=nameG, color='steelblue')
+            ax.plot(graf, label=statuses[nameG], color='steelblue')
             ax.plot(graf.rolling(window=3).mean(), label='Скользящее среднее', color='red')
             ax.set_xlabel('Дни', fontsize=14)
-            ax.set_title(nameG, fontsize=16)
+            ax.set_title(statuses[nameG], fontsize=16)
             ax.legend(title='', loc='upper left', fontsize=14)
             fig.tight_layout()
             fig_list.append(fig)
@@ -119,7 +124,7 @@ def get_kran_15_rez_data(file_path: str) -> dict:
         for nameG, graf in dict_of_frames.items():
             fig, ax = plt.subplots(figsize=(10, 6))
             plot_acf(graf, ax=ax)
-            ax.set_title(nameG, fontsize=16)
+            ax.set_title(statuses[nameG], fontsize=16)
             plt.tight_layout()
             fig_list.append(fig)
         return fig_list

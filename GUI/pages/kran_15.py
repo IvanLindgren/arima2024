@@ -1,8 +1,10 @@
 import flet as ft # Фреймворк для создания графического приложения
 import time # Для работы со временем
+import warnings
 from utils.Buttons import Button # Шаблон кнопок
 from pathlib import Path # Для работы с файлами
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
+warnings.filterwarnings('ignore')
 
 
 @route('/kran_15')

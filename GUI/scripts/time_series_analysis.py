@@ -4,11 +4,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
+warnings.simplefilter('ignore', UserWarning)
+#warnings.filterwarnings('ignore')
 from statsmodels.tsa.stattools import adfuller, kpss
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 from datetime import datetime
+
 
 # Функция для проверки стационарности
 def check_stationarity(time_series, significance_level=0.05):
