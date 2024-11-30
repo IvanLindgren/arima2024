@@ -4,18 +4,14 @@ import warnings
 warnings.filterwarnings('ignore')
 import matplotlib.dates as mdates
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.seasonal import seasonal_decompose
-from pylab import rcParams
-from scripts.arima_tuning import tune_arima_with_grid_search
-from scripts.arima_forecasting import train_and_forecast_with_metrics
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
 
 
 def adf_test(series, significance_level=0.05):
     """
     Тест Дики-Фуллера для проверки стационарности временного ряда.
     """
-    from statsmodels.tsa.stattools import adfuller
-
     adf_result = adfuller(series.dropna())
     is_stationary = adf_result[1] < significance_level
     return {
@@ -25,6 +21,11 @@ def adf_test(series, significance_level=0.05):
         "Stationary": is_stationary,
     }
 
+def difference(series, order=1):
+    """
+    Применение дифференцирования к временному ряду.
+    """
+    return series.diff(order).dropna()
 
 def get_kran_15_state_data(file_pathes: list[str]) -> dict:
     def to_dataframe(file_path: str) -> pd.DataFrame:
@@ -35,37 +36,124 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
                 df = pd.read_csv(file_path, encoding='utf-8')
             else:
                 raise ValueError("Поддерживаются только файлы с расширением .xlsx, .xls и .csv")
-            df['Datetime'] = pd.to_datetime(df['Дата'], format='%y-%m-%d %H:%M:%S.%f')
+            df['Datetime'] = pd.to_datetime(df['Дата'], errors='coerce')
             df.drop(columns=['Дата'], inplace=True)
             df.set_index('Datetime', inplace=True)
             df.sort_index(inplace=True)
-            if df is not None:
-                df = normalize_dataframe(df)
             return df
         except Exception as e:
-            print(f"Ошибка при чтении Excel файла: {e}")
+            print(f"Ошибка при чтении файла: {e}")
             return None
 
-    # Нормализация индекса DataFrame
-    def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
-        if dataframe is not None:
-            dataframe.index = dataframe.index.normalize()
-        return dataframe
-
     def count_records_by_day_auto(df: pd.DataFrame) -> pd.DataFrame:
-        # Получаем имя первого столбца
-        column_name = df.columns[0]
-
-        # Фильтруем строки, где значение в первом столбце не равно NaN
-        filtered_df = df.dropna(subset=[column_name])
-
-        # Группируем данные по дням и считаем количество записей
-        daily_counts = filtered_df.groupby(pd.Grouper(freq='D')).size()
-
-        # Преобразуем результат в DataFrame
-        counts_df = daily_counts.to_frame(name=column_name)
-
+        if df is None or df.empty:
+            return pd.DataFrame()
+        daily_counts = df.groupby(pd.Grouper(freq='D')).size()
+        counts_df = daily_counts.to_frame(name='Count')
         return counts_df
+
+    # Загрузка данных
+    allGr = {}
+    id_df = to_dataframe(file_pathes[1])
+    to_df = to_dataframe(file_pathes[2])
+    from_df = to_dataframe(file_pathes[3])
+    state_df = to_dataframe(file_pathes[0])
+
+    # Агрегирование данных для ID, TO и FROM
+    allGr['ID'] = count_records_by_day_auto(id_df)
+    allGr['TO'] = count_records_by_day_auto(to_df)
+    allGr['FROM'] = count_records_by_day_auto(from_df)
+
+    # Обработка данных по столбцу 'Статус'
+    status_groups = {}
+    for rez, group in state_df.groupby('Статус'):
+        if rez == 'Сообщение':
+            continue
+        rez_counts = group.groupby(pd.Grouper(freq='D')).size()
+        rez_df = rez_counts.to_frame(name='Count')
+        status_groups[rez] = rez_df
+
+    # Теперь сосредоточимся только на прогнозировании по 'Статус'
+    kran_15_state_data = dict()
+    forecasts = dict()
+
+    # Обработка каждого временного ряда по 'Статус'
+    for name, time_series in status_groups.items():
+        name_data = dict()
+        series_data = time_series['Count']
+
+        # Проверка стационарности
+        adf_result = adf_test(series_data)
+        name_data['stationarity'] = adf_result
+        print(f"\nТест Дики-Фуллера для {name}:")
+        print(f"ADF Statistic: {adf_result['ADF Statistic']}")
+        print(f"p-value: {adf_result['p-value']}")
+        print(f"Critical Values: {adf_result['Critical Values']}")
+        print(f"Стационарен: {adf_result['Stationary']}")
+
+        # Если ряд нестационарен, применяем дифференцирование
+        if not adf_result['Stationary']:
+            series_data_diff = difference(series_data)
+            print(f"Применено дифференцирование для {name}")
+            d = 1
+        else:
+            series_data_diff = series_data
+            d = 0
+
+        # Построение графиков ACF и PACF
+        fig, axes = plt.subplots(1, 2, figsize=(16, 4))
+        plot_acf(series_data_diff, ax=axes[0], lags=20)
+        plot_pacf(series_data_diff, ax=axes[1], lags=20, method='ywm')
+        axes[0].set_title(f"ACF для {name}")
+        axes[1].set_title(f"PACF для {name}")
+        plt.show()
+
+        # Ввод параметров ARIMA от пользователя
+        print(f"Введите параметры ARIMA для временного ряда '{name}':")
+        p = int(input("Введите порядок AR (p): "))
+        q = int(input("Введите порядок MA (q): "))
+        best_order = (p, d, q)
+        name_data['best_order'] = best_order
+
+        # Обучение модели и прогнозирование
+        try:
+            model = ARIMA(series_data, order=best_order)
+            model_fit = model.fit()
+            forecast_steps = 7  # Прогноз на 7 дней
+            forecast = model_fit.forecast(steps=forecast_steps)
+            name_data['forecast'] = forecast
+
+            # Построение графика прогноза
+            forecast_index = pd.date_range(start=series_data.index[-1] + pd.Timedelta(days=1), periods=forecast_steps, freq='D')
+            forecast_series = pd.Series(forecast, index=forecast_index)
+
+            # Объединяем данные для графика
+            combined_series = pd.concat([series_data, forecast_series])
+
+            plt.figure(figsize=(12, 6))
+            plt.plot(combined_series.index, combined_series.values, label='Исторические данные и прогноз')
+            plt.axvline(x=series_data.index[-1], color='red', linestyle='--', label='Начало прогноза')
+            plt.title(f"Прогноз для {name}")
+            plt.xlabel("Дата")
+            plt.ylabel("Количество")
+            plt.legend()
+            plt.grid()
+            plt.tight_layout()
+            plt.show()
+
+            name_data['model'] = model_fit
+
+        except Exception as e:
+            print(f"Ошибка при обучении модели для {name}: {e}")
+            name_data['error'] = str(e)
+
+        forecasts[name] = name_data
+
+    kran_15_state_data['forecasts'] = forecasts
+
+    # Если нужно, можно сохранить или вывести результаты обработки по другим столбцам (ID, TO, FROM)
+    # Например, построить графики без прогнозирования
+    plots = dict()
 
     # Функция для построения общего графика
     def create_general_graf(dict_of_frames: dict) -> None:
@@ -79,103 +167,13 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
         axes.legend(loc='upper left')
         plt.tight_layout()
         plots['Общий график'] = fig
+        plt.show()
 
-    # Функция для построения сезонных графиков
-    def create_seasonal_graf(dict_of_frames: dict) -> None:
-        rcParams['figure.figsize'] = 11, 9
-        for nameG, graf in dict_of_frames.items():
-            decompose = seasonal_decompose(graf, period=6)
-            fig = decompose.plot()
-            fig.suptitle(nameG, fontsize=25)
-            fig.set_size_inches(12, 8)
-            plots[f'Сезонные графики {nameG}'] = fig
+    # Построение графиков для ID, TO, FROM
+    create_general_graf(allGr)
 
-    # Функция для построения графика скользящего среднего
-    def create_moving_average_graf(dict_of_frames: dict) -> None:
-        for nameG, graf in dict_of_frames.items():
-            fig, ax = plt.subplots(figsize=(12, 8))
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m"))
-            ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-            ax.plot(graf, label=nameG, color='steelblue')
-            ax.plot(graf.rolling(window=3).mean(), label='Скользящее среднее', color='red')
-            ax.set_xlabel('Дни', fontsize=14)
-            ax.set_title(nameG, fontsize=16)
-            ax.legend(title='', loc='upper left', fontsize=14)
-            fig.tight_layout()
-            plots[f'Построение скользящего среднего {nameG}'] = fig
-
-    # Функция для построения графика автокорреляции
-    def create_autocor_graf(dict_of_frames: dict) -> None:
-        for nameG, graf in dict_of_frames.items():
-            fig, ax = plt.subplots(figsize=(12, 8))
-            plot_acf(graf, ax=ax)
-            ax.set_title(nameG, fontsize=16)
-            plt.tight_layout()
-            plots[f'График автокорреляции {nameG}'] = fig
-
-    # Загружаем и подготавливаем данные
-    allGr = {}
-    id_df = to_dataframe(file_pathes[1])
-    to_df = to_dataframe(file_pathes[2])
-    from_df = to_dataframe(file_pathes[3])
-    state_df = to_dataframe(file_pathes[0])
-
-    # Инициализация словаря для хранения временных рядов
-    allGr['ID'] = count_records_by_day_auto(id_df)
-    allGr['TO'] = count_records_by_day_auto(to_df)
-    allGr['FROM'] = count_records_by_day_auto(from_df)
-
-    for rez, group in state_df.groupby('Статус'):
-        # Группируем данные по дням и считаем количество записей
-        rez_counts = group.groupby(pd.Grouper(freq='D')).size()
-
-        # Пропускаем, если статус — 'Сообщение'
-        if rez == 'Сообщение':
-            continue
-
-        # Создаем DataFrame из результатов и сохраняем его в словарь
-        rez_df = rez_counts.to_frame(name=rez)
-        allGr[rez] = rez_df
-
-    kran_15_state_data = dict()
-    plots = dict()
-    forecasts = dict()
-
-    # Построение графиков (если требуется)
-    # create_general_graf(allGr)
-    # create_seasonal_graf(allGr)
-    # create_moving_average_graf(allGr)
-    # create_autocor_graf(allGr)
-
-    # Далее выполняем анализ и прогноз для каждого временного ряда
-    for name, time_series in allGr.items():
-        name_data = dict()
-        # Используем правильное название столбца
-        count_column = time_series.columns[0]
-        series_data = time_series[count_column]
-
-        # Проверка стационарности
-        adf_result = adf_test(series_data)
-        name_data['stationarity'] = adf_result
-        print(f"\nТест Дики-Фуллера для {name}: {adf_result}")
-
-        # Подбор параметров модели и расчет метрик
-        best_order, metrics = tune_arima_with_grid_search(series_data)
-        name_data['parametrs'] = metrics
-        print(f"Лучшие параметры ARIMA для {name}: {best_order}")
-
-        # Обучение модели и прогнозирование
-        forecast, forecast_metrics, fig = train_and_forecast_with_metrics(series_data, order=best_order)
-        name_data['forecast'] = forecast
-        name_data['forecast_metrics'] = forecast_metrics
-        name_data['model'] = None  # Если модель возвращается, можно сохранить ее здесь
-        name_data['plot'] = fig  # График прогноза
-        forecasts[name] = name_data
-
-    kran_15_state_data['forecasts'] = forecasts
     kran_15_state_data['plots'] = plots
     return kran_15_state_data
-
 
 # Путь к файлам
 paths = [
@@ -184,7 +182,6 @@ paths = [
     r'C:\Users\denis\Downloads\Telegram Desktop\LPC_Kran15_Data_To_Month.xlsx',
     r'C:\Users\denis\Downloads\Telegram Desktop\LPC_Kran15_Data_From_Month.xlsx'
 ]
-
 
 # Запуск обработки
 kran_15_state_data = get_kran_15_state_data(paths)
