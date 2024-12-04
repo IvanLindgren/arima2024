@@ -42,7 +42,7 @@ def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
 
     axes.set_xlabel('Дни')
     axes.xaxis.set_major_formatter(date_form)
-    axes.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+    axes.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
     axes.grid()
     axes.legend()
     plt.tight_layout()
@@ -76,7 +76,7 @@ def create_moving_average_graf(dict_of_frames: dict, window: int = 3,
         graf = graf.iloc[::interval]
         fig, ax = plt.subplots(figsize=(15, 8))
         ax.xaxis.set_major_formatter(date_form)
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
 
         ax.plot(graf, label=nameG, color='steelblue')
         ax.plot(graf.rolling(window=window).mean(), label='Скользящее среднее', color='red')
@@ -125,6 +125,7 @@ for rez, group in rz.groupby('Результат'):
 
     rez_df = rez_counts.to_frame(name=rez)
     allGr[rez] = rez_df
+
 
 
 
