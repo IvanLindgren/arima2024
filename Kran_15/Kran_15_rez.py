@@ -31,11 +31,13 @@ def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 
 # Построение общего графика
-def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m") -> Figure:
+def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
+                        interval: int = 1) -> Figure:
     fig, axes = plt.subplots(figsize=(12, 8))
     date_form = mdates.DateFormatter(date_format)
 
     for nameG, graf in dict_of_frames.items():
+        graf = graf.iloc[::interval]
         graf.plot(ax=axes, label=nameG)
 
     axes.set_xlabel('Дни')
@@ -49,11 +51,13 @@ def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m") -> Fig
 
 
 # Построение сезонных графиков
-def create_seasonal_graf(dict_of_frames: dict, period: int = 6) -> list[Figure]:
+def create_seasonal_graf(dict_of_frames: dict, period: int = 6,
+                         interval: int = 1) -> list[Figure]:
     rcParams['figure.figsize'] = 11, 9
     fig_list = []
 
     for nameG, graf in dict_of_frames.items():
+        graf = graf.iloc[::interval]
         decompose = seasonal_decompose(graf, period=period)
         fig = decompose.plot()
         fig.suptitle(nameG, fontsize=25)
@@ -63,11 +67,13 @@ def create_seasonal_graf(dict_of_frames: dict, period: int = 6) -> list[Figure]:
 
 
 # Построение графика скользящего среднего
-def create_moving_average_graf(dict_of_frames: dict, window: int = 3, date_format: str = "%d-%m") -> list[Figure]:
+def create_moving_average_graf(dict_of_frames: dict, window: int = 3,
+                               date_format: str = "%d-%m", interval: int = 1) -> list[Figure]:
     fig_list = []
     date_form = mdates.DateFormatter(date_format)
 
     for nameG, graf in dict_of_frames.items():
+        graf = graf.iloc[::interval]
         fig, ax = plt.subplots(figsize=(15, 8))
         ax.xaxis.set_major_formatter(date_form)
         ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
@@ -86,10 +92,11 @@ def create_moving_average_graf(dict_of_frames: dict, window: int = 3, date_forma
 
 
 # Построение графика автокорреляции
-def create_autocor_graf(dict_of_frames: dict) -> list[Figure]:
+def create_autocor_graf(dict_of_frames: dict, interval: int = 1) -> list[Figure]:
     fig_list = []
 
     for nameG, graf in dict_of_frames.items():
+        graf = graf.iloc[::interval]
         fig, ax = plt.subplots(figsize=(10, 6))
         plot_acf(graf, ax=ax)
         ax.set_title(nameG, fontsize=16)
@@ -118,7 +125,6 @@ for rez, group in rz.groupby('Результат'):
 
     rez_df = rez_counts.to_frame(name=rez)
     allGr[rez] = rez_df
-
 
 
 
