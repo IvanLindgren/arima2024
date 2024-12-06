@@ -217,44 +217,44 @@ def plot_kran_15_state(pg: PageData) -> None:
     # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
     
-    #try:
-    # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-    data = get_kran_15_state_data(file_pathes=pathes)
-    dict_plots = data['plots']
+    try:
+        # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
+        data = get_kran_15_state_data(file_pathes=pathes)
+        dict_plots = data['plots']
 
-    # Создадим отдельные списки для графиков и их заголовков 
-    plot_names = []
-    plot_figs = []
-    metrics = []
+        # Создадим отдельные списки для графиков и их заголовков 
+        plot_names = []
+        plot_figs = []
+        metrics = []
 
-    # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
-    for name, plot in dict_plots.items():
-        if type(plot) == list:
-            for subplot in plot:
-                plot_figs.append(MatplotlibChart(figure=subplot, original_size=True, expand=True))
+        # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
+        for name, plot in dict_plots.items():
+            if type(plot) == list:
+                for subplot in plot:
+                    plot_figs.append(MatplotlibChart(figure=subplot, original_size=True, expand=True))
+                    plot_names.append(name)
+            else:
+                plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
                 plot_names.append(name)
-        else:
-            plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
-            plot_names.append(name)
 
-    # Работаем со словарем 'forecasts':
-    forecasts = data['forecasts']
+        # Работаем со словарем 'forecasts':
+        forecasts = data['forecasts']
 
-    for name, name_data in forecasts.items():
-        plot_figs.append(MatplotlibChart(figure=name_data['plot'], original_size=True, expand=True))
-        plot_names.append('Прогноз')
-        tmp = 'Метрики: '
-        for key, value in name_data['parametrs'].items():
-            tmp += f'{key}: {value} '
-        metrics.append(tmp)
+        for name, name_data in forecasts.items():
+            plot_figs.append(MatplotlibChart(figure=name_data['plot'], original_size=True, expand=True))
+            plot_names.append('Прогноз')
+            tmp = 'Метрики: '
+            for key, value in name_data['parametrs'].items():
+                tmp += f'{key}: {value} '
+            metrics.append(tmp)
 
-    # Выводим текущий график и его заголовок на экран
-    cur_plot.content = plot_figs[0]
-    cur_plot_title.value = plot_names[0]
-    pr.disabled = True
-    pr.visible = False
-    pg.page.update()
-    '''except:
+        # Выводим текущий график и его заголовок на экран
+        cur_plot.content = plot_figs[0]
+        cur_plot_title.value = plot_names[0]
+        pr.disabled = True
+        pr.visible = False
+        pg.page.update()
+    except:
         cur_plot.content = ft.Text(
             value=f'Ошибка при обработке файла!',
             color=ft.colors.RED,
@@ -268,7 +268,7 @@ def plot_kran_15_state(pg: PageData) -> None:
         btn_save.disabled = True
         pr.disabled = True
         pr.visible = False
-        pg.page.update()'''
+        pg.page.update()
     
 
     

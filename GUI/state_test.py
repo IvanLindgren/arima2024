@@ -179,7 +179,7 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
     to_df= to_dataframe(file_pathes[2])
     from_df = to_dataframe(file_pathes[3])
     state_df = to_dataframe(file_pathes[0])
-    
+    print(state_df)
         
     # Инициализация словаря для хранения временных рядов
     allGr['ID'] = count_records_by_day_auto(id_df)
@@ -223,7 +223,7 @@ def get_kran_15_state_data(file_pathes: list[str]) -> dict:
         
         name_data = dict()
         # Проверка стационарности и декомпозиция
-        #name_data['stationarity'] = f"Анализ для {name}: {check_stationarity(time_series[name])}"
+        name_data['stationarity'] = f"Анализ для {name}: {check_stationarity(time_series[name])}"
         
         # Подбор параметров модели и расчет метрик
         best_order, metrics = tune_arima_with_grid_search(time_series[name])

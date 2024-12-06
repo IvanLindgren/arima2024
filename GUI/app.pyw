@@ -8,6 +8,7 @@ from pages.kran_15_state import kran_15_state
 from pages.kran_17_rez import kran_17_rez # Страница Кран 17
 from pages.balka import balka # Страница Балка
 from pages.scaner import scaner # Страница Сканер
+from pages.forecast import forecast_page
 from plots.plot_kran_15_rez import plot_kran_15_rez # Страница с графиками Кран 15
 from plots.plot_kran_15_state import plot_kran_15_state
 from plots.plot_kran_17_rez import plot_kran_17_rez # Страница с графиками Кран 17
@@ -23,6 +24,7 @@ def main(page: ft.Page) -> None:
     navigator = VirtualFletNavigator(
        routes={
            '/': home,
+           '/forecast': forecast_page,
            '/kran_15_rez': kran_15_rez,
            '/kran_15_state': kran_15_state,
            '/kran_17': kran_17_rez,
