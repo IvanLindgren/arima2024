@@ -46,110 +46,111 @@ def count_records_by_day_auto(df: pd.DataFrame) -> pd.DataFrame:
     return counts_df
 
 
-# Построение общего графика
-def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
-                        interval: int = 1) -> Figure:
-    fig, axes = plt.subplots(figsize=(12, 8))
-    date_form = mdates.DateFormatter(date_format)
+def plots_kran_15_state(path: str):
+    # Построение общего графика
+    def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
+                            interval: int = 1) -> Figure:
+        fig, axes = plt.subplots(figsize=(12, 8))
+        date_form = mdates.DateFormatter(date_format)
 
-    for nameG, graf in dict_of_frames.items():
-        graf = graf.iloc[::interval]
-        graf.plot(ax=axes, label=nameG)
+        for nameG, graf in dict_of_frames.items():
+            graf = graf.iloc[::interval]
+            graf.plot(ax=axes, label=nameG)
 
-    axes.set_xlabel('Дни')
-    axes.xaxis.set_major_formatter(date_form)
-    axes.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
-    axes.grid()
-    axes.legend()
-    plt.tight_layout()
-
-    return fig
-
-
-# Построение сезонных графиков
-def create_seasonal_graf(dict_of_frames: dict, period: int = 6,
-                         interval: int = 1) -> list[Figure]:
-    rcParams['figure.figsize'] = 11, 9
-    fig_list = []
-
-    for nameG, graf in dict_of_frames.items():
-        graf = graf.iloc[::interval]
-        decompose = seasonal_decompose(graf, period=period)
-        fig = decompose.plot()
-        fig.suptitle(nameG, fontsize=25)
-        fig_list.append(fig)
-
-    return fig_list
-
-
-# Построение графика скользящего среднего
-def create_moving_average_graf(dict_of_frames: dict, window: int = 3,
-                               date_format: str = "%d-%m", interval: int = 1) -> list[Figure]:
-    fig_list = []
-    date_form = mdates.DateFormatter(date_format)
-
-    for nameG, graf in dict_of_frames.items():
-        graf = graf.iloc[::interval]
-        fig, ax = plt.subplots(figsize=(15, 8))
-        ax.xaxis.set_major_formatter(date_form)
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
-
-        ax.plot(graf, label=nameG, color='steelblue')
-        ax.plot(graf.rolling(window=window).mean(), label='Скользящее среднее', color='red')
-
-        ax.set_xlabel('Дни', fontsize=14)
-        ax.set_title(nameG, fontsize=16)
-        ax.legend(title='', loc='upper left', fontsize=14)
-
-        fig.tight_layout()
-        fig_list.append(fig)
-
-    return fig_list
-
-
-# Построение графика автокорреляции
-def create_autocor_graf(dict_of_frames: dict, interval: int = 1) -> list[Figure]:
-    fig_list = []
-
-    for nameG, graf in dict_of_frames.items():
-        graf = graf.iloc[::interval]
-        fig, ax = plt.subplots(figsize=(10, 6))
-        plot_acf(graf, ax=ax)
-        ax.set_title(nameG, fontsize=16)
+        axes.set_xlabel('Дни')
+        axes.xaxis.set_major_formatter(date_form)
+        axes.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
+        axes.grid()
+        axes.legend()
         plt.tight_layout()
-        fig_list.append(fig)
 
-    return fig_list
-
+        return fig
 
 
-'''# Словарь для хранения всех графиков
-allGr = {}
+    # Построение сезонных графиков
+    def create_seasonal_graf(dict_of_frames: dict, period: int = 6,
+                            interval: int = 1) -> list[Figure]:
+        rcParams['figure.figsize'] = 11, 9
+        fig_list = []
 
-id_df = read_excel_to_dataframe(file_path='Кран/State/id.xlsx')
-to_df= read_excel_to_dataframe(file_path='Кран/State/to.xlsx')
-from_df = read_excel_to_dataframe(file_path='Кран/State/from.xlsx')
+        for nameG, graf in dict_of_frames.items():
+            graf = graf.iloc[::interval]
+            decompose = seasonal_decompose(graf, period=period)
+            fig = decompose.plot()
+            fig.suptitle(nameG, fontsize=25)
+            fig_list.append(fig)
 
-state_df = read_excel_to_dataframe(file_path='Кран/State/state.xlsx')
+        return fig_list
 
 
-# Устанавливаем формат даты для графиков как "день-месяц"
-date_form = mdates.DateFormatter("%d-%m")
+    # Построение графика скользящего среднего
+    def create_moving_average_graf(dict_of_frames: dict, window: int = 3,
+                                date_format: str = "%d-%m", interval: int = 1) -> list[Figure]:
+        fig_list = []
+        date_form = mdates.DateFormatter(date_format)
 
-# Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
-for rez, group in state_df.groupby('Статус'):
-    # Группируем данные по дням и считаем количество записей
-    rez_counts = group.groupby(pd.Grouper(freq='D')).size()
+        for nameG, graf in dict_of_frames.items():
+            graf = graf.iloc[::interval]
+            fig, ax = plt.subplots(figsize=(15, 8))
+            ax.xaxis.set_major_formatter(date_form)
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
 
-    # Убираем двоеточие в конце, если оно есть
-    if rez == 'Сообщение':
-        continue
+            ax.plot(graf, label=nameG, color='steelblue')
+            ax.plot(graf.rolling(window=window).mean(), label='Скользящее среднее', color='red')
 
-    # Создаем DataFrame из результатов и сохраняем его в словарь
-    rez_df = rez_counts.to_frame(name=rez)
-    # allGr[rez] = to_dataframe(dataframe=rez_df)
-    allGr[rez] = rez_df
+            ax.set_xlabel('Дни', fontsize=14)
+            ax.set_title(nameG, fontsize=16)
+            ax.legend(title='', loc='upper left', fontsize=14)
 
-allGr['ID'] = count_records_by_day_auto(id_df)
-allGr['TO'] = count_records_by_day_auto(to_df)
-allGr['FROM'] = count_records_by_day_auto(from_df)'''
+            fig.tight_layout()
+            fig_list.append(fig)
+
+        return fig_list
+
+
+    # Построение графика автокорреляции
+    def create_autocor_graf(dict_of_frames: dict, interval: int = 1) -> list[Figure]:
+        fig_list = []
+
+        for nameG, graf in dict_of_frames.items():
+            graf = graf.iloc[::interval]
+            fig, ax = plt.subplots(figsize=(10, 6))
+            plot_acf(graf, ax=ax)
+            ax.set_title(nameG, fontsize=16)
+            plt.tight_layout()
+            fig_list.append(fig)
+
+        return fig_list
+
+
+
+    # Словарь для хранения всех графиков
+    allGr = {}
+
+    id_df = read_excel_to_dataframe(file_path='Кран/State/id.xlsx')
+    to_df= read_excel_to_dataframe(file_path='Кран/State/to.xlsx')
+    from_df = read_excel_to_dataframe(file_path='Кран/State/from.xlsx')
+
+    state_df = read_excel_to_dataframe(file_path='Кран/State/state.xlsx')
+
+
+    # Устанавливаем формат даты для графиков как "день-месяц"
+    date_form = mdates.DateFormatter("%d-%m")
+
+    # Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
+    for rez, group in state_df.groupby('Статус'):
+        # Группируем данные по дням и считаем количество записей
+        rez_counts = group.groupby(pd.Grouper(freq='D')).size()
+
+        # Убираем двоеточие в конце, если оно есть
+        if rez == 'Сообщение':
+            continue
+
+        # Создаем DataFrame из результатов и сохраняем его в словарь
+        rez_df = rez_counts.to_frame(name=rez)
+        # allGr[rez] = to_dataframe(dataframe=rez_df)
+        allGr[rez] = rez_df
+
+    allGr['ID'] = count_records_by_day_auto(id_df)
+    allGr['TO'] = count_records_by_day_auto(to_df)
+    allGr['FROM'] = count_records_by_day_auto(from_df)

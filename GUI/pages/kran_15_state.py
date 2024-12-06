@@ -149,7 +149,7 @@ def kran_15_state(pg: PageData) -> None:
     
     required_files = []
 
-    for i in ('State', 'State ID', 'State TO', 'State FROM'):
+    for i in ('State', 'ID', 'TO', 'FROM'):
         required_files.append(
             ft.Text(
                 value=f"Выберите файл {i}",

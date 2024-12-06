@@ -16,7 +16,16 @@ from scripts.Scaner import read_excel_to_dataframe as read_scaner, count_records
 from scripts.Balka import read_excel_to_dataframe as read_balka, count_records_by_hour_auto as count_balka
 
 
-def arima_forecast_and_plot(data_source, column_name, path, forecast_period=5):
+'''from arima_forecasting import train_and_forecast_with_metrics, comparative_analysis
+from arima_tuning import tune_arima_with_grid_search, find_best_seasonal_period, evaluate_arima_with_best_params
+from time_series_analysis import check_stationarity, decompose_time_series, plot_acf_pacf
+
+from kran15_rez import read_excel_to_dataframe as read_kran15_rez
+from kran_15_state import read_excel_to_dataframe as read_kran15_state, count_records_by_day_auto
+from Scaner import read_excel_to_dataframe as read_scaner, count_records_by_hour_auto as count_scaner
+from Balka import read_excel_to_dataframe as read_balka, count_records_by_hour_auto as count_balka'''
+
+def arima_forecast_and_plot(data_source, column_name, paths, forecast_period=5):
     """
     Функция для прогнозирования временного ряда с помощью ARIMA и построения графика.
 
@@ -32,25 +41,25 @@ def arima_forecast_and_plot(data_source, column_name, path, forecast_period=5):
 
     # Чтение данных в зависимости от источника
     if data_source == 'kran_15_rez':
-        df = read_kran15_rez(file_path=path)  # Заменить на корректный путь к файлу
+        df = read_kran15_rez(file_paths=paths)  # Заменить на корректный путь к файлу
         if df is not None:
             time_series = df[df['Результат'].str.startswith(column_name)]
             time_series = time_series.groupby(pd.Grouper(freq='D')).size()
 
     elif data_source == 'kran_15_state':
-        df = read_kran15_state(
-            file_path=f'Кран/State/{column_name.lower()}.xlsx')  # Заменить на корректный путь к файлу
+        df = read_kran15_state(file_paths=paths)  # Заменить на корректный путь к файлу
         if df is not None:
             time_series = count_records_by_day_auto(df)
             time_series = time_series[column_name]
+            
     elif data_source == 'Scaner':
-        df = read_scaner(file_path=f'LPC_Scaner_Data_{column_name}.xlsx')  # Заменить на корректный путь к файлу
+        df = read_scaner(file_paths=paths)  # Заменить на корректный путь к файлу
         if df is not None:
             time_series = count_scaner(df)
             time_series = time_series[column_name]
 
     elif data_source == 'Balka':
-        df = read_balka(file_path=f'LPC_Step_B_Data_{column_name}.xlsx')  # Заменить на корректный путь к файлу
+        df = read_balka(file_paths=paths)  # Заменить на корректный путь к файлу
         if df is not None:
             time_series = count_balka(df)
             time_series = time_series[column_name]
@@ -89,7 +98,7 @@ def arima_forecast_and_plot(data_source, column_name, path, forecast_period=5):
 
     # Конвертируем Figure в словарь (невозможно напрямую)
     # Вместо этого сохраняем график в файл и возвращаем путь к файлу
-    #figure.savefig('forecast_plot.png')  # Сохраняем график как PNG
+    figure.savefig('forecast_plot.png')  # Сохраняем график как PNG
 
     # Возвращаем результаты в виде словаря
     results = {
@@ -114,3 +123,4 @@ def arima_forecast_and_plot(data_source, column_name, path, forecast_period=5):
 #print(results)
 # Конвертируем результаты в JSON
 #print(json.dumps(results, indent=4))
+#print(arima_forecast_and_plot(data_source='kran_15_state', column_name='Статус', forecast_period=5, path='C:/Users/user/Documents/test/LPC_Kran15_Data_State_Month.xlsx'))

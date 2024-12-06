@@ -56,7 +56,7 @@ def decompose_time_series(time_series, period=24):
     """
     try:
         decomposition = seasonal_decompose(time_series, model='additive', period=period)
-        fig, axes = plt.subplots(4, 1, figsize=(12, 10))
+        fig, axes = plt.subplots(4, 1, figsize=(12, 8))
 
         axes[0].plot(time_series, label='Исходный ряд')
         axes[0].legend(loc='upper left')
@@ -75,7 +75,8 @@ def decompose_time_series(time_series, period=24):
         axes[3].set_title('Остаток')
 
         plt.tight_layout()
-        plt.show()
+        #plt.show()
+        return fig
     except Exception as e:
         print(f"Ошибка декомпозиции временного ряда: {e}")
 
@@ -98,6 +99,7 @@ def plot_acf_pacf(time_series, lags=40):
         axes[1].set_title('Частичная автокорреляционная функция (PACF)')
 
         plt.tight_layout()
-        plt.show()
+        #plt.show()
+        return fig
     except Exception as e:
         print(f"Ошибка построения ACF/PACF: {e}")

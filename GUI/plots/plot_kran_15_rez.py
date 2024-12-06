@@ -5,8 +5,9 @@ import sys # Для корректной работы иморта файлов
 import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from Kran_15.Kran_15_Rez import get_kran_15_rez_data
+#from Kran_15.Kran_15_Rez import get_kran_15_rez_data
 from scripts.kran15_rez import plots_kran_15_rez
+from scripts.forecast_test2 import evaluate_arima_model
 matplotlib.use("svg") # Для корректного отображения графиков
 warnings.filterwarnings('ignore')
 
@@ -48,23 +49,30 @@ def plot_kran_15_rez(pg: PageData) -> None:
         
     # Перейти на предыдущий график
     def prev_plot(e) -> None:
-        btn_save.disabled = False
         cur_index = plot_figs.index(cur_plot.content)
         if cur_index >= 1:
             cur_plot.content = plot_figs[cur_index - 1]
             cur_plot_title.value = plot_names[cur_index - 1]
+            if isinstance(plot_figs[cur_index - 1], ft.Column):
+                btn_save.disabled = True
+            else:
+                btn_save.disabled = False
         cur_plot.update()
         cur_plot_title.update()
         btn_save.update()
         
     def go_home(e) -> None:
-        plot_figs.clear()
-        plot_names.clear()
-        cur_plot.content = None
-        cur_plot_title.value = None
-        pg.page.update()
-        time.sleep(0.01)
-        pg.navigator.navigate('/', page=pg.page)
+        try:
+            plot_figs.clear()
+            plot_names.clear()
+            cur_plot.content = None
+            cur_plot_title.value = None
+            pg.page.update()
+        except:
+            pass
+        finally:
+            time.sleep(0.01)
+            pg.navigator.navigate('/', page=pg.page)
 
     def go_forecast(e) -> None:
         plot_figs.clear()
@@ -175,9 +183,10 @@ def plot_kran_15_rez(pg: PageData) -> None:
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        data = plots_kran_15_rez(path=pathes)
+        data = plots_kran_15_rez(paths=pathes)
         dict_plots = data['plots']
         values = data['values']
+        
 
         btn_forecast = ft.ElevatedButton(
             content=ft.Text(
@@ -191,6 +200,20 @@ def plot_kran_15_rez(pg: PageData) -> None:
             height=100,
             bgcolor=ft.colors.INDIGO_500,
             on_click=go_forecast
+        )
+
+        btn_custom_arima = ft.ElevatedButton(
+            content=ft.Text(
+                value='Расчитать',
+                size=25,
+                color=ft.colors.WHITE,
+                weight=ft.FontWeight.W_700,
+                text_align=ft.TextAlign.CENTER
+            ),
+            width=400,
+            height=100,
+            bgcolor=ft.colors.INDIGO_500,
+            on_click=lambda _: evaluate_arima_model()
         )
 
         dd = ft.Dropdown(
@@ -236,6 +259,40 @@ def plot_kran_15_rez(pg: PageData) -> None:
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
         
+        arima_params_card = ft.Column(
+            controls=[
+                ft.Text(
+                    value=f"Выберите параметры ARIMA",
+                    size=25,
+                    color=ft.colors.WHITE,
+                    text_align=ft.TextAlign.CENTER,
+                    width=700,
+                    italic=True
+                ),
+                ft.Row(
+                    [
+                        ft.TextField(
+                            label='p(0;5)',
+                            width=100
+                        ),
+                        ft.TextField(
+                            label='d(0;2)',
+                            width=100
+                        ),
+                        ft.TextField(
+                            label='q(0;5)',
+                            width=100
+                        ),
+                    ], alignment=ft.MainAxisAlignment.CENTER
+                ),
+                '''ft.Column(
+                    controls=[
+                        None
+                    ]
+                )'''
+            ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
+
         # Создадим отдельные списки для графиков и их заголовков 
         plot_names = []
         plot_figs = []
@@ -248,13 +305,15 @@ def plot_kran_15_rez(pg: PageData) -> None:
         plot_figs.append(selection_card)
         plot_names.append('')
 
+        plot_figs.append(arima_params_card)
+        plot_names.append('')
+
         # Выводим текущий график и его заголовок на экран
         cur_plot.content = plot_figs[0]
         cur_plot_title.value = plot_names[0]
         btn_go_home.disabled = False
-        print(dd.value, slider.value)
         pg.page.update()
-    except:
+    except Exception as e:
         cur_plot.content = ft.Text(
             value=f'Ошибка при обработке файла!',
             color=ft.colors.RED,
@@ -268,3 +327,4 @@ def plot_kran_15_rez(pg: PageData) -> None:
         btn_save.disabled = True
         btn_go_home.disabled = False
         pg.page.update()
+        
