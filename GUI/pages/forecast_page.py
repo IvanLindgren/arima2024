@@ -174,74 +174,75 @@ def forecast_page(pg: PageData) -> None:
     time.sleep(0.01)
     
     
-    #try:
-    data = arima_forecast_and_plot(data_source=args['source'], 
-                                column_name=args['param'],
-                                forecast_period=args['days'],
-                                paths=args['path']
-                                )
-    print(data)
-    
-    banner_data = ft.Column(
-        controls=[
-            ft.Row(
+    try:
+        data = arima_forecast_and_plot(data_source=args['source'], 
+                                    column_name=args['param'],
+                                    forecast_period=args['days'],
+                                    paths=args['path'],
+                                    custom_order=args['order']
+                                    )
+        
+        
+        banner_data = ft.Column(
+            controls=[
+                ft.Row(
+                    [
+                        ft.Text(f"Параметр: {data['column_name']}", size=11),
+                        ft.Text(f"Источник: {data['data_source']}", size=11),
+                        ft.Text(f"Период предсказания: {data['forecast_period']}", size=11),
+                        ft.Text(f"Последняя дата: {data['last_date']}", size=11),
+                    ]
+                ),
+                ft.Text(f"Метрики: {data['metrics']}", size=11),
+                ft.Text(f"Предсказанные значения: {data['forecast_values']}", size=11),
+                ft.Text(f"Предсказанные индексы: {data['forecast_index']}", size=11),
+                ft.Text(f"Реальные значения {data['actual_values']}", size=11),
+                ft.Text(f"Реальные индексы: {data['actual_index']}", size=11),
+                ft.Text(f"Тесты на стационарность: {data['stationarity_tests']}", size=11),
+                
+            ], horizontal_alignment=ft.CrossAxisAlignment.START
+        )
+
+        
+
+        
+
+        plot_names = [
+            f"Прогноз для {data['column_name']}",
+        ]
+        plot_figs = [
+            MatplotlibChart(figure=data['plot'], original_size=True, expand=True),
+        ]
+
+        if isinstance(args['path'], list):
+            banner_data.controls.extend(
                 [
-                    ft.Text(f"Параметр: {data['column_name']}", size=11),
-                    ft.Text(f"Источник: {data['data_source']}", size=11),
-                    ft.Text(f"Период предсказания: {data['forecast_period']}", size=11),
-                    ft.Text(f"Последняя дата: {data['last_date']}", size=11),
+                    ft.Text(f"Декомпозиция: Тренд: {data['decomposition']['trend']}", size=11),
+                    ft.Text(f"Декомпозиция: Сезонность: {data['decomposition']['seasonal']}", size=11),
+                    ft.Text(f"Декомпозиция: Resid: {data['decomposition']['resid']}", size=11)
                 ]
-            ),
-            ft.Text(f"Метрики: {data['metrics']}", size=11),
-            ft.Text(f"Предсказанные значения: {data['forecast_values']}", size=11),
-            ft.Text(f"Предсказанные индексы: {data['forecast_index']}", size=11),
-            ft.Text(f"Реальные значения {data['actual_values']}", size=11),
-            ft.Text(f"Реальные индексы: {data['actual_index']}", size=11),
-            ft.Text(f"Тесты на стационарность: {data['stationarity_tests']}", size=11),
-            
-        ], horizontal_alignment=ft.CrossAxisAlignment.START
-    )
+            )
+            plot_figs.extend(
+                [
+                    MatplotlibChart(figure=data['decomposition']['plot'], original_size=True, expand=True),
+                    MatplotlibChart(figure=data['acf_pacf_plot'], original_size=True, expand=True)
+                ]
+            )
+            plot_names.extend(
+                [
+                    f"График декомпозиции для {data['column_name']}",
+                    f"Графики ACF, PACF для {data['column_name']}"
+                ]
+            )
 
+
+        banner.content = banner_data
+        cur_plot.content = plot_figs[0]
+        cur_plot_title.value = plot_names[0]
+        btn_go_home.disabled = False
+        pg.page.update()
     
-
-    
-
-    plot_names = [
-        f"Прогноз для {data['column_name']}",
-    ]
-    plot_figs = [
-        MatplotlibChart(figure=data['plot'], original_size=True, expand=True),
-    ]
-
-    if isinstance(args['path'], list):
-        banner_data.controls.extend(
-            [
-                ft.Text(f"Декомпозиция: Тренд: {data['decomposition']['trend']}", size=11),
-                ft.Text(f"Декомпозиция: Сезонность: {data['decomposition']['seasonal']}", size=11),
-                ft.Text(f"Декомпозиция: Resid: {data['decomposition']['resid']}", size=11)
-            ]
-        )
-        plot_figs.extend(
-            [
-                MatplotlibChart(figure=data['decomposition']['plot'], original_size=True, expand=True),
-                MatplotlibChart(figure=data['acf_pacf_plot'], original_size=True, expand=True)
-            ]
-        )
-        plot_names.extend(
-            [
-                f"График декомпозиции для {data['column_name']}",
-                f"Графики ACF, PACF для {data['column_name']}"
-            ]
-        )
-
-
-    banner.content = banner_data
-    cur_plot.content = plot_figs[0]
-    cur_plot_title.value = plot_names[0]
-    btn_go_home.disabled = False
-    pg.page.update()
-    
-    '''except:
+    except:
         cur_plot.content = ft.Text(
             value=f'Ошибка при прогнозировании!',
             color=ft.colors.RED,
@@ -251,7 +252,7 @@ def forecast_page(pg: PageData) -> None:
         )
         btn_save.disabled = True
         btn_go_home.disabled = False
-        pg.page.update()'''
+        pg.page.update()
 
     
     

@@ -6,7 +6,7 @@ import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
 #from Kran_15.Kran_15_Rez import get_kran_15_rez_data
-from scripts.kran15_rez import plots_kran_15_rez
+from scripts.Kran15_rez import plots_kran_15_rez
 from scripts.forecast_test2 import evaluate_arima_model
 matplotlib.use("svg") # Для корректного отображения графиков
 warnings.filterwarnings('ignore')
@@ -85,9 +85,54 @@ def plot_kran_15_rez(pg: PageData) -> None:
             'path': pathes,
             'days': int(slider.value),
             'param': dd.value,
-            'source': 'kran_15_rez'
+            'source': 'kran_15_rez',
+            'order': None
         }
         pg.navigator.navigate('/forecast', page=pg.page, args=args)
+
+    def go_custom_forecast(e) -> None:
+        plot_figs.clear()
+        plot_names.clear()
+        cur_plot.content = None
+        cur_plot_title.value = None
+        pg.page.update()
+        time.sleep(0.01)
+        args = {
+            'path': pathes,
+            'days': int(slider.value),
+            'param': dd.value,
+            'source': 'kran_15_rez',
+            'order': (
+                int(p_choice.value),
+                int(d_choice.value),
+                int(q_choice.value),
+            )
+        }
+        pg.navigator.navigate('/forecast', page=pg.page, args=args)
+
+    def p_submit(e) -> None:
+        try:
+            if int(p_choice.value) not in range(0, 5 + 1):
+                p_choice.value = ''
+        except:
+            p_choice.value = ''
+        p_choice.update()
+
+    def d_submit(e) -> None:
+        try:
+            if int(d_choice.value) not in range(0, 2 + 1):
+                d_choice.value = ''
+        except:
+            d_choice.value = ''
+        d_choice.update()
+
+    def q_submit(e) -> None:
+        try:
+            if int(q_choice.value) not in range(0, 5 + 1):
+                q_choice.value = ''
+        except:
+            q_choice.value = ''
+        q_choice.update()
 
     # Настройки окна программы
     pg.page.title = 'Кран 15 Rez (графики)'
@@ -202,9 +247,9 @@ def plot_kran_15_rez(pg: PageData) -> None:
             on_click=go_forecast
         )
 
-        btn_custom_arima = ft.ElevatedButton(
+        btn_custom_forecast = ft.ElevatedButton(
             content=ft.Text(
-                value='Расчитать',
+                value='Прогноз с выбранными параметрами',
                 size=25,
                 color=ft.colors.WHITE,
                 weight=ft.FontWeight.W_700,
@@ -213,7 +258,7 @@ def plot_kran_15_rez(pg: PageData) -> None:
             width=400,
             height=100,
             bgcolor=ft.colors.INDIGO_500,
-            on_click=lambda _: evaluate_arima_model()
+            on_click=go_custom_forecast
         )
 
         dd = ft.Dropdown(
@@ -259,8 +304,27 @@ def plot_kran_15_rez(pg: PageData) -> None:
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
         
+        p_choice = ft.TextField(
+            label='p(0;5)',
+            width=100,
+            on_submit=p_submit
+        )
+
+        d_choice = ft.TextField(
+            label='d(0;2)',
+            width=100,
+            on_submit=d_submit
+        )
+
+        q_choice = ft.TextField(
+            label='q(0;5)',
+            width=100,
+            on_submit=q_submit
+        )
+        
         arima_params_card = ft.Column(
             controls=[
+                ft.Container(height=50),
                 ft.Text(
                     value=f"Выберите параметры ARIMA",
                     size=25,
@@ -269,27 +333,8 @@ def plot_kran_15_rez(pg: PageData) -> None:
                     width=700,
                     italic=True
                 ),
-                ft.Row(
-                    [
-                        ft.TextField(
-                            label='p(0;5)',
-                            width=100
-                        ),
-                        ft.TextField(
-                            label='d(0;2)',
-                            width=100
-                        ),
-                        ft.TextField(
-                            label='q(0;5)',
-                            width=100
-                        ),
-                    ], alignment=ft.MainAxisAlignment.CENTER
-                ),
-                '''ft.Column(
-                    controls=[
-                        None
-                    ]
-                )'''
+                ft.Row([p_choice, d_choice, q_choice], alignment=ft.MainAxisAlignment.CENTER),
+                btn_custom_forecast
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
 

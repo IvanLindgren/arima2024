@@ -1,6 +1,7 @@
 import pandas as pd  # Для работы с DataFrame
 import matplotlib.pyplot as plt  # Для визуализации данных
 import matplotlib.dates as mdates  # Форматирование и работа с датами на графиках
+from typing import Union, List
 from statsmodels.graphics.tsaplots import plot_acf  # График автокорреляции
 from statsmodels.tsa.seasonal import seasonal_decompose  # Декомпозиция временных рядов
 from matplotlib.figure import Figure
@@ -8,18 +9,30 @@ from pylab import rcParams  # Параметры графиков
 
 
 # Чтение Excel-файла и преобразование в DataFrame
-def read_excel_to_dataframe(file_path: str) -> pd.DataFrame:
+def read_excel_to_dataframe(file_paths: Union[str, List[str]]) -> pd.DataFrame:
     try:
-        df = pd.read_excel(file_path)
-        df['Datetime'] = pd.to_datetime(df['Дата'], format='%y-%m-%d %H:%M:%S.%f')
-        df.drop(columns=['Дата'], inplace=True)
-        df.set_index('Datetime', inplace=True)
-        df.sort_index(inplace=True)
-        if df is not None:
-            df = normalize_dataframe(df)
-        return df
+        # Если путь один, преобразуем его в список
+        if isinstance(file_paths, str):
+            file_paths = [file_paths]
+            
+        dfs = []
+        for file_path in file_paths:
+            df = pd.read_excel(file_path)
+            df['Datetime'] = pd.to_datetime(df['Дата'], format='%y-%m-%d %H:%M:%S.%f')
+            df.drop(columns=['Дата'], inplace=True)
+            df.set_index('Datetime', inplace=True)
+            df.sort_index(inplace=True)
+            if df is not None:
+                df = normalize_dataframe(df)  
+            dfs.append(df)
+        
+        # Объединяем все считанные DataFrame в один
+        combined_df = pd.concat(dfs, sort=True)
+        combined_df.sort_index(inplace=True)
+        
+        return combined_df
     except Exception as e:
-        print(f"Ошибка при чтении Excel файла: {e}")
+        print(f"Ошибка при чтении Excel файла(ов): {e}")
         return None
 
 
@@ -46,7 +59,7 @@ def count_records_by_day_auto(df: pd.DataFrame) -> pd.DataFrame:
     return counts_df
 
 
-def plots_kran_15_state(path: str):
+def plots_kran_15_state(paths: Union[str, List[str]]):
     # Построение общего графика
     def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
                             interval: int = 1) -> Figure:
@@ -154,3 +167,16 @@ def plots_kran_15_state(path: str):
     allGr['ID'] = count_records_by_day_auto(id_df)
     allGr['TO'] = count_records_by_day_auto(to_df)
     allGr['FROM'] = count_records_by_day_auto(from_df)
+
+    data = dict()
+    values = list(allGr.keys())
+    plots = dict()
+    create_general_graf(allGr)
+    create_seasonal_graf(allGr)
+    create_moving_average_graf(allGr)
+    create_autocor_graf(allGr)
+
+    data['plots'] = plots
+    data['values'] = values
+    
+    return data

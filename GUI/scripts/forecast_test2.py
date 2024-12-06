@@ -14,7 +14,7 @@ from pmdarima import auto_arima
 from joblib import Parallel, delayed
 
 # Импортируем функции для чтения данных
-from scripts.kran15_rez import read_excel_to_dataframe as read_kran15_rez
+from scripts.Kran15_rez import read_excel_to_dataframe as read_kran15_rez
 from scripts.kran_15_state import read_excel_to_dataframe as read_kran15_state, count_records_by_day_auto
 from scripts.Scaner import read_excel_to_dataframe as read_scaner, count_records_by_hour_auto as count_scaner
 from scripts.Balka import read_excel_to_dataframe as read_balka, count_records_by_hour_auto as count_balka
@@ -260,7 +260,7 @@ def comparative_analysis(time_series, order, forecast_period=14):
         return {'error': str(e)}
 
 
-def arima_forecast_and_plot(data_source, column_name, paths, forecast_period=5):
+def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None, forecast_period=5):
     """
     Основная функция для прогнозирования и формирования итогового результата в JSON-совместимом формате.
 
@@ -353,7 +353,8 @@ def arima_forecast_and_plot(data_source, column_name, paths, forecast_period=5):
 
     # Подбор параметров ARIMA
     best_order, best_metrics = tune_arima_with_grid_search(train_data)
-
+    if custom_order is not None:
+        best_order = custom_order
     # Прогноз
     model_fit, forecast = evaluate_arima_with_best_params(train_data, order=best_order, forecast_steps=forecast_period)
 
