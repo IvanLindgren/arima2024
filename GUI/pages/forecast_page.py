@@ -4,8 +4,7 @@ import time # Для работы со временем
 import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from Kran_15.Kran_15_Rez import get_kran_15_rez_data
-from scripts.kran15_rez import plots_kran_15_rez
+from scripts.Kran15_rez import plots_kran_15_rez
 #from scripts.forecast_test import arima_forecast_and_plot
 from scripts.forecast_test2 import arima_forecast_and_plot, evaluate_arima_model
 matplotlib.use("svg") # Для корректного отображения графиков
@@ -182,7 +181,7 @@ def forecast_page(pg: PageData) -> None:
                                     custom_order=args['order']
                                     )
         
-        
+        print(data)
         banner_data = ft.Column(
             controls=[
                 ft.Row(
@@ -214,7 +213,7 @@ def forecast_page(pg: PageData) -> None:
             MatplotlibChart(figure=data['plot'], original_size=True, expand=True),
         ]
 
-        if isinstance(args['path'], list):
+        if isinstance(args['path'], list) and len(args['path']) != 1 and not 'error' in data['decomposition'] and not 'error' in data['acf_pacf_plot']:
             banner_data.controls.extend(
                 [
                     ft.Text(f"Декомпозиция: Тренд: {data['decomposition']['trend']}", size=11),
@@ -241,7 +240,7 @@ def forecast_page(pg: PageData) -> None:
         cur_plot_title.value = plot_names[0]
         btn_go_home.disabled = False
         pg.page.update()
-    
+
     except:
         cur_plot.content = ft.Text(
             value=f'Ошибка при прогнозировании!',

@@ -4,7 +4,7 @@ import time # Для работы со временем
 import sys # Для корректной работы иморта файлов
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from Kran_15.Kran_15_Rez import get_kran_15_rez_data # Функция, которая возвращает хеш - таблицу с графиками и заголовками
+
 matplotlib.use("svg") # Для корректного отображения графиков
 
 
@@ -145,7 +145,7 @@ def plot_scaner(pg: PageData) -> None:
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        dict_plots = get_kran_15_rez_data(path=pathes)
+        dict_plots = {}
         
         # Создадим отдельные списки для графиков и их заголовков 
         plot_names = []

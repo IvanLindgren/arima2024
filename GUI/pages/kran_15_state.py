@@ -14,6 +14,8 @@ def kran_15_state(pg: PageData) -> None:
     def clear_files(e) -> None:
         sel_files.clear()
         sel_files_names.content.controls.clear()
+        txt_required_file.content = required_files[0]
+        txt_required_file.update()
         sel_files_names.update()
         btn_calculate.disabled = True
         btn_calculate.update()
@@ -69,7 +71,7 @@ def kran_15_state(pg: PageData) -> None:
     # Выбор файла/файлов
     def pick_files(e: ft.FilePickerResultEvent) -> None:
         # Если диалоговое окно закрыто и был выбран хотя бы 1 файл
-        if file_picker.result and file_picker.result.files and len(sel_files) < 4:
+        if file_picker.result and file_picker.result.files:
             
             extensions = ['.csv', '.xlsx', '.xlsm', '.xls'] # Допустимые расширения
             bad_files = set() # Множество, в котором будут хранится файлы с некорректным расширением
@@ -100,6 +102,8 @@ def kran_15_state(pg: PageData) -> None:
                     sel_files[file.name] = file.path  # Добавляем файл в хеш-таблицу
                     if len(sel_files) < 4:
                         txt_required_file.content = required_files[len(sel_files)]
+                    else:
+                        txt_required_file.content = required_files[len(sel_files) % len(required_files)]
                     btn_calculate.disabled = False
                     btn_calculate.update()
             

@@ -76,14 +76,14 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
         axes.grid()
         axes.legend()
         plt.tight_layout()
-
+        plots['Общий график'] = fig
         return fig
 
 
     # Построение сезонных графиков
     def create_seasonal_graf(dict_of_frames: dict, period: int = 6,
                             interval: int = 1) -> list[Figure]:
-        rcParams['figure.figsize'] = 11, 9
+        rcParams['figure.figsize'] = 12, 8
         fig_list = []
 
         for nameG, graf in dict_of_frames.items():
@@ -91,6 +91,7 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
             decompose = seasonal_decompose(graf, period=period)
             fig = decompose.plot()
             fig.suptitle(nameG, fontsize=25)
+            plots[f'Сезонные графики {nameG}'] = fig
             fig_list.append(fig)
 
         return fig_list
@@ -104,7 +105,7 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
 
         for nameG, graf in dict_of_frames.items():
             graf = graf.iloc[::interval]
-            fig, ax = plt.subplots(figsize=(15, 8))
+            fig, ax = plt.subplots(figsize=(12, 8))
             ax.xaxis.set_major_formatter(date_form)
             ax.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
 
@@ -116,6 +117,7 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
             ax.legend(title='', loc='upper left', fontsize=14)
 
             fig.tight_layout()
+            plots[f'Построение скользящего среднего {nameG}'] = fig
             fig_list.append(fig)
 
         return fig_list
@@ -127,11 +129,12 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
 
         for nameG, graf in dict_of_frames.items():
             graf = graf.iloc[::interval]
-            fig, ax = plt.subplots(figsize=(10, 6))
+            fig, ax = plt.subplots(figsize=(12, 8))
             plot_acf(graf, ax=ax)
             ax.set_title(nameG, fontsize=16)
             plt.tight_layout()
             fig_list.append(fig)
+            plots[f'График автокорелляции {nameG}'] = fig
 
         return fig_list
 
@@ -140,17 +143,20 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
     # Словарь для хранения всех графиков
     allGr = {}
 
-    id_df = read_excel_to_dataframe(file_path='Кран/State/id.xlsx')
-    to_df= read_excel_to_dataframe(file_path='Кран/State/to.xlsx')
-    from_df = read_excel_to_dataframe(file_path='Кран/State/from.xlsx')
 
-    state_df = read_excel_to_dataframe(file_path='Кран/State/state.xlsx')
+    
+    state_df = read_excel_to_dataframe([paths[i] for i in range(len(paths)) if i % 4 == 0])
+    id_df = read_excel_to_dataframe([paths[i] for i in range(len(paths))if i % 4 == 1])
+    to_df= read_excel_to_dataframe([paths[i] for i in range(len(paths)) if i % 4 == 2])
+    from_df = read_excel_to_dataframe([paths[i] for i in range(len(paths)) if i % 4 == 3])
+
+    
 
 
     # Устанавливаем формат даты для графиков как "день-месяц"
     date_form = mdates.DateFormatter("%d-%m")
 
-    # Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
+    '''# Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
     for rez, group in state_df.groupby('Статус'):
         # Группируем данные по дням и считаем количество записей
         rez_counts = group.groupby(pd.Grouper(freq='D')).size()
@@ -162,11 +168,12 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
         # Создаем DataFrame из результатов и сохраняем его в словарь
         rez_df = rez_counts.to_frame(name=rez)
         # allGr[rez] = to_dataframe(dataframe=rez_df)
-        allGr[rez] = rez_df
+        allGr[rez] = rez_df'''
 
     allGr['ID'] = count_records_by_day_auto(id_df)
-    allGr['TO'] = count_records_by_day_auto(to_df)
-    allGr['FROM'] = count_records_by_day_auto(from_df)
+    allGr['Куда'] = count_records_by_day_auto(to_df)
+    allGr['Откуда'] = count_records_by_day_auto(from_df)
+    allGr['Статус'] = count_records_by_day_auto(state_df)
 
     data = dict()
     values = list(allGr.keys())

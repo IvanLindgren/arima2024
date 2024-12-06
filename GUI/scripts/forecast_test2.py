@@ -15,7 +15,7 @@ from joblib import Parallel, delayed
 
 # Импортируем функции для чтения данных
 from scripts.Kran15_rez import read_excel_to_dataframe as read_kran15_rez
-from scripts.kran_15_state import read_excel_to_dataframe as read_kran15_state, count_records_by_day_auto
+from scripts.Kran15_state import read_excel_to_dataframe as read_kran15_state, count_records_by_day_auto
 from scripts.Scaner import read_excel_to_dataframe as read_scaner, count_records_by_hour_auto as count_scaner
 from scripts.Balka import read_excel_to_dataframe as read_balka, count_records_by_hour_auto as count_balka
 
@@ -300,6 +300,7 @@ def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None,
 
     elif data_source == 'kran_15_state':
         df = read_kran15_state(file_paths=paths)
+        print(df)
         if df is not None:
             day_counts = count_records_by_day_auto(df)
             if column_name in day_counts.columns:
