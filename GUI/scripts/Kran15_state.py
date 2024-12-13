@@ -72,7 +72,7 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
 
         axes.set_xlabel('Дни')
         axes.xaxis.set_major_formatter(date_form)
-        axes.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
+        axes.xaxis.set_major_locator(mdates.DayLocator(interval=8*interval))
         axes.grid()
         axes.legend()
         plt.tight_layout()
@@ -107,7 +107,7 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
             graf = graf.iloc[::interval]
             fig, ax = plt.subplots(figsize=(12, 8))
             ax.xaxis.set_major_formatter(date_form)
-            ax.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=8*interval))
 
             ax.plot(graf, label=nameG, color='steelblue')
             ax.plot(graf.rolling(window=window).mean(), label='Скользящее среднее', color='red')
@@ -155,20 +155,6 @@ def plots_kran_15_state(paths: Union[str, List[str]]):
 
     # Устанавливаем формат даты для графиков как "день-месяц"
     date_form = mdates.DateFormatter("%d-%m")
-
-    '''# Группировка данных по результатам и создание отдельных DataFrame для каждого статуса
-    for rez, group in state_df.groupby('Статус'):
-        # Группируем данные по дням и считаем количество записей
-        rez_counts = group.groupby(pd.Grouper(freq='D')).size()
-
-        # Убираем двоеточие в конце, если оно есть
-        if rez == 'Сообщение':
-            continue
-
-        # Создаем DataFrame из результатов и сохраняем его в словарь
-        rez_df = rez_counts.to_frame(name=rez)
-        # allGr[rez] = to_dataframe(dataframe=rez_df)
-        allGr[rez] = rez_df'''
 
     allGr['ID'] = count_records_by_day_auto(id_df)
     allGr['Куда'] = count_records_by_day_auto(to_df)

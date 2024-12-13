@@ -93,7 +93,7 @@ def scaner(pg: PageData) -> None:
                     )
                     
                     sel_files[file.name] = file.path  # Добавляем файл в хеш-таблицу
-                    
+                    txt_required_file.content = required_files[len(sel_files) % len(required_files)]
                     btn_calculate.disabled = False
                     btn_calculate.update()
             
@@ -101,10 +101,17 @@ def scaner(pg: PageData) -> None:
             if duplicates or bad_files:
                 error_handler(bad_files=bad_files, duplicates=duplicates)
 
-            sel_files_names.update() # Обновляем список на экране
+            pg.page.update() # Обновляем список на экране
+
+    btn_go_home = ft.IconButton(
+        icon=ft.icons.HOME,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
+    )
 
     # Настройки страницы
-    pg.page.title = 'Scaner'
+    pg.page.title = 'Сканер'
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
@@ -125,14 +132,7 @@ def scaner(pg: PageData) -> None:
         center_title=True,
         toolbar_height=110,
         bgcolor=ft.colors.INDIGO_700,
-        actions=[
-            ft.IconButton(
-                icon=ft.icons.HOME,
-                icon_color=ft.colors.WHITE,
-                icon_size=52,
-                on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-            )
-        ]
+        actions=[btn_go_home]
     )
     
     # Объект для обработки выбора файла/файлов
@@ -141,6 +141,22 @@ def scaner(pg: PageData) -> None:
     
     # Хеш-таблица с именами файлов и путями к ним
     sel_files = dict()
+
+    required_files = []
+
+    for i in ('ID', 'TO'):
+        required_files.append(
+            ft.Text(
+                value=f"Выберите файл {i}",
+                size=16,
+                color=ft.colors.WHITE,
+                text_align=ft.TextAlign.CENTER,
+                width=400,
+                italic=True
+            )
+        )
+
+    txt_required_file = ft.Container(required_files[0])
     
     # Колонка с именами выбранных файлов
     sel_files_names = ft.Card(
@@ -154,7 +170,6 @@ def scaner(pg: PageData) -> None:
     )
 
     # Создание кнопок для главной страницы
-    btn_go_home = Button(val='На главную', page=pg.page, icon_name=ft.icons.HOME).create_btn()
     btn_pick_files = Button(val='Выбрать файл', page=pg.page, icon_name=ft.icons.FOLDER).create_btn()
     btn_calculate = Button(val='Произвести расчет', page=pg.page, icon_name=ft.icons.PLAY_ARROW).create_btn()
     btn_clear_files = ft.ElevatedButton(
@@ -177,14 +192,13 @@ def scaner(pg: PageData) -> None:
     btn_calculate.disabled = True
 
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
-    btn_go_home.on_click = lambda _: pg.navigator.navigate('/', page=pg.page)
     btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
     btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_scaner', page=pg.page, args=sel_files)
     btn_clear_files.on_click = clear_files
 
     # Объединяем в один объект колонку с именами выбранных файлов и кнопку "очистить список"
     sel_files_field = ft.Card(
-        content=ft.Column([sel_files_names, btn_clear_files]), 
+        content=ft.Column([txt_required_file, sel_files_names, btn_clear_files]), 
         shape=ft.RoundedRectangleBorder(radius=20), 
         color=ft.colors.INDIGO_700
     )

@@ -4,9 +4,9 @@ import time # Для работы со временем
 import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from scripts.Kran15_rez import plots_kran_15_rez
-#from scripts.forecast_test import arima_forecast_and_plot
-from scripts.forecast_test2 import arima_forecast_and_plot, evaluate_arima_model
+from matplotlib.figure import Figure
+from scripts.Kran15_rez import get_data_kran_15_rez
+from scripts.forecast import arima_forecast_and_plot, evaluate_arima_model
 matplotlib.use("svg") # Для корректного отображения графиков
 warnings.filterwarnings('ignore')
 
@@ -213,7 +213,7 @@ def forecast_page(pg: PageData) -> None:
             MatplotlibChart(figure=data['plot'], original_size=True, expand=True),
         ]
 
-        if isinstance(args['path'], list) and len(args['path']) != 1 and not 'error' in data['decomposition'] and not 'error' in data['acf_pacf_plot']:
+        if isinstance(args['path'], list) and len(args['path']) != 1 and not 'error' in data['decomposition'] and isinstance(data['acf_pacf_plot'], Figure):
             banner_data.controls.extend(
                 [
                     ft.Text(f"Декомпозиция: Тренд: {data['decomposition']['trend']}", size=11),

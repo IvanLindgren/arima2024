@@ -100,10 +100,7 @@ def kran_15_state(pg: PageData) -> None:
                     )
 
                     sel_files[file.name] = file.path  # Добавляем файл в хеш-таблицу
-                    if len(sel_files) < 4:
-                        txt_required_file.content = required_files[len(sel_files)]
-                    else:
-                        txt_required_file.content = required_files[len(sel_files) % len(required_files)]
+                    txt_required_file.content = required_files[len(sel_files) % len(required_files)]
                     btn_calculate.disabled = False
                     btn_calculate.update()
             
@@ -120,7 +117,7 @@ def kran_15_state(pg: PageData) -> None:
         on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
     )
     # Настройки страницы
-    pg.page.title = 'Kran_15'
+    pg.page.title = 'Кран 15 State'
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False

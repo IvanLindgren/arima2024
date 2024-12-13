@@ -54,7 +54,7 @@ def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
         dataframe.index = dataframe.index.normalize()
     return dataframe
 
-def plots_kran_15_rez(paths: Union[str, List[str]]):
+def get_data_kran_15_rez(paths: Union[str, List[str]]):
     
     # Построение общего графика
     def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
@@ -68,7 +68,7 @@ def plots_kran_15_rez(paths: Union[str, List[str]]):
 
         axes.set_xlabel('Дни')
         axes.xaxis.set_major_formatter(date_form)
-        axes.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
+        axes.xaxis.set_major_locator(mdates.DayLocator(interval=8*interval))
         axes.legend()
         plt.tight_layout()
         plots['Общий график'] = fig
@@ -102,7 +102,7 @@ def plots_kran_15_rez(paths: Union[str, List[str]]):
             graf = graf.iloc[::interval]
             fig, ax = plt.subplots(figsize=(12, 8))
             ax.xaxis.set_major_formatter(date_form)
-            ax.xaxis.set_major_locator(mdates.DayLocator(interval=2*interval))
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=8*interval))
 
             ax.plot(graf, label=nameG, color='steelblue')
             ax.plot(graf.rolling(window=window).mean(), label='Скользящее среднее', color='red')
@@ -155,9 +155,6 @@ def plots_kran_15_rez(paths: Union[str, List[str]]):
         rez_df = rez_counts.to_frame(name=rez)
         allGr[rez] = rez_df
     
-    
-    
-   
     data = dict()
     values = list(allGr.keys())
     plots = dict()
@@ -170,6 +167,3 @@ def plots_kran_15_rez(paths: Union[str, List[str]]):
     data['values'] = values
     
     return data
-
-
-

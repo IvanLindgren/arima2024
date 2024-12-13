@@ -5,9 +5,8 @@ import sys # Для корректной работы иморта файлов
 import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-#from Kran_15.Kran_15_Rez import get_kran_15_rez_data
-from scripts.Kran15_rez import plots_kran_15_rez
-from scripts.forecast_test2 import evaluate_arima_model
+from scripts.Kran15_rez import get_data_kran_15_rez
+from scripts.forecast import evaluate_arima_model
 matplotlib.use("svg") # Для корректного отображения графиков
 warnings.filterwarnings('ignore')
 
@@ -228,7 +227,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        data = plots_kran_15_rez(paths=pathes)
+        data = get_data_kran_15_rez(paths=pathes)
         dict_plots = data['plots']
         values = data['values']
         

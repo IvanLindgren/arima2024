@@ -5,9 +5,8 @@ import sys # Для корректной работы иморта файлов
 import warnings
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-#from Kran_15.Kran_15_Rez import get_kran_15_rez_data
-from scripts.Kran15_rez import plots_kran_15_rez
-from scripts.forecast_test2 import evaluate_arima_model
+from scripts.Kran15_rez import get_data_kran_15_rez
+from scripts.forecast import evaluate_arima_model
 matplotlib.use("svg") # Для корректного отображения графиков
 warnings.filterwarnings('ignore')
 
@@ -196,6 +195,14 @@ def plot_kran_15_rez(pg: PageData) -> None:
         tooltip='Предыдущий график',
     )
 
+    '''btn_next_plot = ft.ElevatedButton(
+        icon=ft.Icon(name=ft.icons.ARROW_RIGHT, size=10, color=ft.colors.WHITE),
+        bgcolor=ft.colors.INDIGO_700,
+        tooltip='Следующий график',
+        width=50,
+        height=525
+    )'''
+    
     # Зададим кнопкам соотвествующие функции
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
@@ -208,10 +215,10 @@ def plot_kran_15_rez(pg: PageData) -> None:
                 content=progress_ring,
                 alignment=ft.alignment.center,  
         ),
-        width=800,
+        width=820,
         height=525,
         color=ft.colors.INDIGO_700,
-        shape=ft.RoundedRectangleBorder(radius=20)
+        shape=ft.RoundedRectangleBorder(radius=15)
     )
 
     # Добавляем все созданные объекты на страницу
@@ -228,10 +235,9 @@ def plot_kran_15_rez(pg: PageData) -> None:
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        data = plots_kran_15_rez(paths=pathes)
+        data = get_data_kran_15_rez(paths=pathes)
         dict_plots = data['plots']
         values = data['values']
-        
 
         btn_forecast = ft.ElevatedButton(
             content=ft.Text(
@@ -277,7 +283,7 @@ def plot_kran_15_rez(pg: PageData) -> None:
             overlay_color=ft.colors.INDIGO_100,
             label="{value} Дней",
         )
-        
+
         selection_card = ft.Column(
             controls=[
                 ft.Container(height=50),
@@ -303,7 +309,7 @@ def plot_kran_15_rez(pg: PageData) -> None:
                 btn_forecast
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
-        
+
         p_choice = ft.TextField(
             label='p(0;5)',
             width=100,
@@ -321,7 +327,7 @@ def plot_kran_15_rez(pg: PageData) -> None:
             width=100,
             on_submit=q_submit
         )
-        
+
         arima_params_card = ft.Column(
             controls=[
                 ft.Container(height=50),
@@ -341,12 +347,12 @@ def plot_kran_15_rez(pg: PageData) -> None:
         # Создадим отдельные списки для графиков и их заголовков 
         plot_names = []
         plot_figs = []
-        
+
         # Так как у некоторых графиков одинаковые заголовки, выполняем следующий код
         for name, plot in dict_plots.items():
             plot_figs.append(MatplotlibChart(figure=plot, original_size=True, expand=True))
             plot_names.append(name)
-        
+
         plot_figs.append(selection_card)
         plot_names.append('')
 
@@ -358,7 +364,7 @@ def plot_kran_15_rez(pg: PageData) -> None:
         cur_plot_title.value = plot_names[0]
         btn_go_home.disabled = False
         pg.page.update()
-    except Exception as e:
+    except:
         cur_plot.content = ft.Text(
             value=f'Ошибка при обработке файла!',
             color=ft.colors.RED,

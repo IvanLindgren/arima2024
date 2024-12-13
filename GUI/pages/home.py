@@ -82,13 +82,15 @@ def home(pg:PageData) -> None:
     btn_Kran_15_rez.on_click = lambda _: pg.navigator.navigate('/kran_15_rez', page=pg.page)
     btn_Kran_15_state.on_click = lambda _: pg.navigator.navigate('/kran_15_state', page=pg.page)
     btn_Kran_17_rez.on_click = lambda _: pg.navigator.navigate('/kran_17_rez', page=pg.page)
-    btn_Kran_17_state.on_click = None
+    btn_Kran_17_state.on_click = lambda _: pg.navigator.navigate('/kran_17_state', page=pg.page)
     btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
     btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
 
+    # Отключаем кликабельность кнопок, т.к. они будут использоваться в качестве картинки для всплывающего меню
     btn_Kran_15.disabled = True
     btn_Kran_17.disabled = True
 
+    # Всплывающее меню для крана 15
     menu_btn_kran_15 = ft.PopupMenuButton(
         content=btn_Kran_15,
         items=[
@@ -100,6 +102,7 @@ def home(pg:PageData) -> None:
         tooltip='Выберите тип'
     )
 
+    # Всплывающее меню для крана 17
     menu_btn_kran_17 = ft.PopupMenuButton(
         content=btn_Kran_17,
         items=[

@@ -10,9 +10,7 @@ warnings.filterwarnings('ignore')
 @route('/kran_15_rez')
 def kran_15_rez(pg: PageData) -> None:
     
-    pg.navigator.navigator_animation = NavigatorAnimation(NavigatorAnimation.FADE)
-
-    # Очистка списка выбранных файлов
+   # Очистка списка выбранных файлов
     def clear_files(e) -> None:
         sel_files.clear()
         sel_files_names.content.controls.clear()
@@ -110,14 +108,16 @@ def kran_15_rez(pg: PageData) -> None:
 
             sel_files_names.update() # Обновляем список на экране
 
+    # Кнопка домой
     btn_go_home = ft.IconButton(
         icon=ft.icons.HOME,
         icon_color=ft.colors.WHITE,
         icon_size=52,
         on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
     )
+    
     # Настройки страницы
-    pg.page.title = 'Kran_15'
+    pg.page.title = 'Кран 15'
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
@@ -125,7 +125,7 @@ def kran_15_rez(pg: PageData) -> None:
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
-    #  Верхняя панель приложения
+    # Верхняя панель приложения
     pg.page.appbar = ft.AppBar(
         title=ft.Text(
             value='Кран 15 Rez',
