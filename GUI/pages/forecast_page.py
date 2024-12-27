@@ -1,21 +1,20 @@
 import flet as ft # Фреймворк для создания графического приложения
 import matplotlib # Для визуализации данных с помощью графиков 
 import time # Для работы со временем
-import warnings
+import warnings # Чтобы убрать ненужные предупреждения в консоли
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from matplotlib.figure import Figure
-from scripts.Kran15_rez import get_data_kran_15_rez
-from scripts.forecast import arima_forecast_and_plot, evaluate_arima_model
+from matplotlib.figure import Figure # Для работы с графиками
+from scripts.forecast import arima_forecast_and_plot # Функция для прогноза
 matplotlib.use("svg") # Для корректного отображения графиков
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore') # Игнорируем ненужные предупреждения
 
-@route('/forecast')
+@route('/forecast_page')
 def forecast_page(pg: PageData) -> None:
     
     # Получаем аргументы с предыдущей страницы
     args = pg.arguments
-    print(args)
+    
     # Открытие информационного банера
     def open_banner(e) -> None:
         pg.page.open(banner)
@@ -26,7 +25,7 @@ def forecast_page(pg: PageData) -> None:
         pg.page.close(banner)
         pg.page.update()
 
-     # Перейти на следующий график
+    # Перейти на следующий график
     def next_plot(e) -> None:
         cur_index = plot_figs.index(cur_plot.content)
         if cur_index < len(plot_figs) - 1:
@@ -35,7 +34,6 @@ def forecast_page(pg: PageData) -> None:
             
         cur_plot.update()
         cur_plot_title.update()
-        
         
     # Перейти на предыдущий график
     def prev_plot(e) -> None:
@@ -46,8 +44,7 @@ def forecast_page(pg: PageData) -> None:
             
         cur_plot.update()
         cur_plot_title.update()
-        
-
+    
     # Функция сохранения текущего графика в формате 'выбранная папка'/'название графика'.png
     def save(e: ft.FilePickerResultEvent) -> None:
         try:
@@ -55,13 +52,11 @@ def forecast_page(pg: PageData) -> None:
         except:
             pass
     
+    # Перейти на главную
     def go_home(e) -> None:
-        cur_plot.content = None
-        cur_plot_title.value = None
-        pg.page.update()
-        time.sleep(0.01)
+        if banner.open:
+            pg.page.close(banner)
         pg.navigator.navigate('/', page=pg.page)
-
 
     # Настройки окна программы
     pg.page.title = 'Прогноз'
@@ -81,6 +76,7 @@ def forecast_page(pg: PageData) -> None:
         text_align=ft.TextAlign.CENTER
     )
 
+    # Кнопка сохранить
     btn_save = ft.IconButton(
         icon=ft.icons.SAVE,
         icon_color=ft.colors.WHITE,
@@ -88,6 +84,7 @@ def forecast_page(pg: PageData) -> None:
         on_click= lambda _: file_picker.get_directory_path()
     )
 
+    # Кнопка домой
     btn_go_home = ft.IconButton(
         icon=ft.icons.HOME,
         icon_color=ft.colors.WHITE,
@@ -96,6 +93,7 @@ def forecast_page(pg: PageData) -> None:
         disabled=True
     )
 
+    # Кнопка инфо
     btn_info = ft.IconButton(
         icon=ft.icons.INFO,
         icon_color=ft.colors.WHITE,
@@ -112,6 +110,7 @@ def forecast_page(pg: PageData) -> None:
         actions=[btn_go_home, btn_save, btn_info]
     )
 
+    # Всплывающий баннер с полезной нагрузкой
     banner = ft.Banner(
         bgcolor=ft.colors.INDIGO_700,
         content=None,
@@ -125,6 +124,7 @@ def forecast_page(pg: PageData) -> None:
         force_actions_below=True
     )
 
+    # Кнопка следующий график
     btn_next_plot = ft.IconButton(
         icon=ft.icons.ARROW_RIGHT,
         icon_size=40,
@@ -132,6 +132,8 @@ def forecast_page(pg: PageData) -> None:
         icon_color=ft.colors.WHITE,
         tooltip='Следующий график',
     )
+
+    # Кнопка предыдущий график
     btn_prev_plot = ft.IconButton(
         icon=ft.icons.ARROW_LEFT,
         icon_size=40,
@@ -140,6 +142,7 @@ def forecast_page(pg: PageData) -> None:
         tooltip='Предыдущий график',
     )
 
+    # Задаем функцию кнопкам
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
 
@@ -147,6 +150,7 @@ def forecast_page(pg: PageData) -> None:
     file_picker = ft.FilePicker(on_result=save)
     pg.page.overlay.append(file_picker)
 
+    # Колесико загрузки
     progress_ring = ft.ProgressRing(width=52, height=52, stroke_width=2, color=ft.colors.WHITE)
     
     # Объект, поверх которого будут выводиться текущий график
@@ -161,17 +165,17 @@ def forecast_page(pg: PageData) -> None:
         shape=ft.RoundedRectangleBorder(radius=20)
     )
 
+    # Добавляем весь контент на страницу
     pg.page.add(
         ft.Column(
-                [
-                    ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
-                ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
+            [
+                ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
+            ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
     )
 
     # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
-    
     
     try:
         data = arima_forecast_and_plot(data_source=args['source'], 
@@ -181,7 +185,6 @@ def forecast_page(pg: PageData) -> None:
                                     custom_order=args['order']
                                     )
         
-        print(data)
         banner_data = ft.Column(
             controls=[
                 ft.Row(
@@ -202,18 +205,10 @@ def forecast_page(pg: PageData) -> None:
             ], horizontal_alignment=ft.CrossAxisAlignment.START
         )
 
-        
+        plot_names = [ f"Прогноз для {data['column_name']}"]
+        plot_figs = [MatplotlibChart(figure=data['plot'], original_size=True, expand=True)]
 
-        
-
-        plot_names = [
-            f"Прогноз для {data['column_name']}",
-        ]
-        plot_figs = [
-            MatplotlibChart(figure=data['plot'], original_size=True, expand=True),
-        ]
-
-        if isinstance(args['path'], list) and len(args['path']) != 1 and not 'error' in data['decomposition'] and isinstance(data['acf_pacf_plot'], Figure):
+        if isinstance(args['path'], list) and not 'error' in data['decomposition'] and isinstance(data['acf_pacf_plot'], Figure):
             banner_data.controls.extend(
                 [
                     ft.Text(f"Декомпозиция: Тренд: {data['decomposition']['trend']}", size=11),
@@ -233,7 +228,6 @@ def forecast_page(pg: PageData) -> None:
                     f"Графики ACF, PACF для {data['column_name']}"
                 ]
             )
-
 
         banner.content = banner_data
         cur_plot.content = plot_figs[0]

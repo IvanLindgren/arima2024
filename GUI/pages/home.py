@@ -6,6 +6,7 @@ from flet_navigator import * # Дополнение для более удобн
 
 @route('/')
 def home(pg:PageData) -> None:
+    
     # Открытие информационного банера
     def open_banner(e) -> None:
         pg.page.open(banner)
@@ -79,12 +80,12 @@ def home(pg:PageData) -> None:
     btn_Scaner= Button(val='Сканер', page=pg.page, icon_name=ft.icons.ADF_SCANNER).create_btn()
     
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
-    btn_Kran_15_rez.on_click = lambda _: pg.navigator.navigate('/kran_15_rez', page=pg.page)
-    btn_Kran_15_state.on_click = lambda _: pg.navigator.navigate('/kran_15_state', page=pg.page)
-    btn_Kran_17_rez.on_click = lambda _: pg.navigator.navigate('/kran_17_rez', page=pg.page)
-    btn_Kran_17_state.on_click = lambda _: pg.navigator.navigate('/kran_17_state', page=pg.page)
-    btn_Balka.on_click = lambda _: pg.navigator.navigate('/balka', page=pg.page)
-    btn_Scaner.on_click = lambda _: pg.navigator.navigate('/scaner', page=pg.page)
+    btn_Kran_15_rez.on_click = lambda _: pg.navigator.navigate('/file_pick_page', page=pg.page, args={'data_type': 'Кран Rez'})
+    btn_Kran_15_state.on_click = lambda _: pg.navigator.navigate('/file_pick_page', page=pg.page, args={'data_type': 'Кран State'})
+    btn_Kran_17_rez.on_click = lambda _: pg.navigator.navigate('/file_pick_page', page=pg.page, args={'data_type': 'Кран Rez'})
+    btn_Kran_17_state.on_click = lambda _: pg.navigator.navigate('/file_pick_page', page=pg.page, args={'data_type': 'Кран State'})
+    btn_Balka.on_click = lambda _: pg.navigator.navigate('/file_pick_page', page=pg.page, args={'data_type': 'Балка'})
+    btn_Scaner.on_click = lambda _: pg.navigator.navigate('/file_pick_page', page=pg.page, args={'data_type': 'Сканер'})
 
     # Отключаем кликабельность кнопок, т.к. они будут использоваться в качестве картинки для всплывающего меню
     btn_Kran_15.disabled = True

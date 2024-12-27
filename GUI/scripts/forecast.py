@@ -53,11 +53,11 @@ def evaluate_arima_model(time_series, order, forecast_steps=14):
         else:
             metrics = None
 
-        print(model_fit, forecast, metrics)
+        #print(model_fit, forecast, metrics)
         return model_fit, forecast, metrics
         
     except Exception as e:
-        print(f"Ошибка при обучении и прогнозировании: {e}")
+        #print(f"Ошибка при обучении и прогнозировании: {e}")
         return None, None, None
 
 
@@ -139,7 +139,7 @@ def evaluate_arima_with_best_params(time_series, order, seasonal_order=None, for
         predictions = model_fit.forecast(steps=forecast_steps)
         return model_fit, predictions
     except Exception as e:
-        print(f"Ошибка при обучении модели ARIMA: {e}")
+        #print(f"Ошибка при обучении модели ARIMA: {e}")
         return None, None
 
 
@@ -265,7 +265,7 @@ def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None,
     Основная функция для прогнозирования и формирования итогового результата в JSON-совместимом формате.
 
     Args:
-        data_source (str): Источник данных ('kran_15_rez', 'kran_15_state', 'Scaner', 'Balka').
+        data_source (str): Источник данных ('Кран Rez', 'Кран State', 'Сканер', 'Балка').
         column_name (str): Название столбца для прогнозирования.
         paths (list[str]): Пути к файлам для чтения данных.
         forecast_period (int): Период прогнозирования (в днях).
@@ -290,7 +290,7 @@ def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None,
     """
 
     # Чтение данных в зависимости от источника
-    if data_source == 'kran_15_rez':
+    if data_source == 'Кран Rez':
         df = read_kran15_rez(file_paths=paths) 
         if df is not None:
             time_series = df[df['Результат'].str.startswith(column_name)]
@@ -298,11 +298,11 @@ def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None,
         else:
             return {"error": "Данные kran_15_rez не прочитаны"}
 
-    elif data_source == 'kran_15_state':
+    elif data_source == 'Кран State':
         df = read_kran15_state(file_paths=paths)
-        print(df)
         if df is not None:
             day_counts = count_records_by_day_auto(df)
+            print(day_counts.columns)
             if column_name in day_counts.columns:
                 time_series = day_counts[column_name]
             else:
@@ -310,7 +310,7 @@ def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None,
         else:
             return {"error": "Данные kran_15_state не прочитаны"}
 
-    elif data_source == 'Scaner':
+    elif data_source == 'Сканер':
         df = read_scaner(file_paths=paths)
         if df is not None:
             hour_counts = count_scaner(df)
@@ -321,7 +321,7 @@ def arima_forecast_and_plot(data_source, column_name, paths, custom_order: None,
         else:
             return {"error": "Данные Scaner не прочитаны"}
 
-    elif data_source == 'Balka':
+    elif data_source == 'Балка':
         df = read_balka(file_paths=paths)
         if df is not None:
             hour_counts = count_balka(df)

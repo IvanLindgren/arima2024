@@ -38,7 +38,7 @@ def read_excel_to_dataframe(file_paths: Union[str, List[str]]) -> pd.DataFrame:
         
         return combined_df
     except Exception as e:
-        print(f"Ошибка при чтении Excel файла(ов): {e}")
+        #print(f"Ошибка при чтении Excel файла(ов): {e}")
         return None
 
 def count_days_in_df(df: pd.DataFrame) -> int:

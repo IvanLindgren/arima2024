@@ -1,17 +1,32 @@
-import flet as ft
-import time 
-from utils.Buttons import Button
-from pathlib import Path 
-from flet_navigator import *
+import flet as ft # Фреймворк для создания графического приложения
+import time # Для работы со временем
+import warnings # Чтобы убрать ненужные предупреждения в консоли
+from utils.Buttons import Button # Шаблон кнопок
+from pathlib import Path # Для работы с файлами
+from flet_navigator import * # Дополнение для более удобной навигации между страницами
+warnings.filterwarnings('ignore') # Игнорируем ненужные предупреждения
 
 
-@route('/balka')
-def balka(pg: PageData) -> None:
+@route('/file_pick_page')
+def file_pick_page(pg: PageData) -> None:
     
+    # Хеш-таблица с типами объектов и списком требуемых файлов к каждому из них
+    required_files_of_data_types = {
+        'Кран Rez': ['Rez'],
+        'Кран State': ['State', 'ID', 'To', 'From'],
+        'Балка': ['ID', 'To', 'From'],
+        'Сканер':  ['ID', 'To']
+    }
+
+    # Получаем тип объекта из аргументов, переданных с предыдущей страницы
+    data_type = pg.arguments['data_type']
+
     # Очистка списка выбранных файлов
     def clear_files(e) -> None:
         sel_files.clear()
         sel_files_names.content.controls.clear()
+        txt_required_file.content = required_files[0]
+        txt_required_file.update()
         sel_files_names.update()
         btn_calculate.disabled = True
         btn_calculate.update()
@@ -50,16 +65,19 @@ def balka(pg: PageData) -> None:
             )  
         
         # Выводим информацию о всех файлах на экран
-        sel_files_names.update()
         btn_clear_files.disabled=True
-        btn_clear_files.update()
+        btn_calculate.disabled = True
+        btn_go_home.disabled = True
+        pg.page.update()
         time.sleep(2)
         
         # Спустя 2 секунду оставляем на экране список, состоящий только из валидных файлов
         btn_clear_files.disabled=False
-        btn_clear_files.update()
+        btn_go_home.disabled = False
+        if sel_files:
+            btn_calculate.disabled = False
         sel_files_names.content.controls = tmp
-        sel_files_names.update()
+        pg.page.update()
     
     # Выбор файла/файлов
     def pick_files(e: ft.FilePickerResultEvent) -> None:
@@ -91,28 +109,20 @@ def balka(pg: PageData) -> None:
                             width=400
                         )
                     )
-                    
+
                     sel_files[file.name] = file.path  # Добавляем файл в хеш-таблицу
                     txt_required_file.content = required_files[len(sel_files) % len(required_files)]
-                    print(len(sel_files) % len(required_files))
                     btn_calculate.disabled = False
                     btn_calculate.update()
             
             # Если хотя бы одно множество не пустое, запускаем обработку ошибок
             if duplicates or bad_files:
                 error_handler(bad_files=bad_files, duplicates=duplicates)
-
+            
             pg.page.update() # Обновляем список на экране
 
-    btn_go_home = ft.IconButton(
-        icon=ft.icons.HOME,
-        icon_color=ft.colors.WHITE,
-        icon_size=52,
-        on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
-    )
-
     # Настройки страницы
-    pg.page.title = 'Балка'
+    pg.page.title = data_type
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
@@ -120,13 +130,21 @@ def balka(pg: PageData) -> None:
     pg.page.vertical_alignment = ft.MainAxisAlignment.CENTER
     pg.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     
+    # Кнопка домой
+    btn_go_home = ft.IconButton(
+        icon=ft.icons.HOME,
+        icon_color=ft.colors.WHITE,
+        icon_size=52,
+        on_click=lambda _: pg.navigator.navigate('/', page=pg.page)
+    )
+
     #  Верхняя панель приложения
     pg.page.appbar = ft.AppBar(
         title=ft.Text(
-            value='Балка',
+            value=data_type,
             color=ft.colors.WHITE,
             size=80,
-            width=400,
+            width=600,
             text_align=ft.TextAlign.CENTER,
             weight=ft.FontWeight.W_700,
         ),
@@ -142,13 +160,15 @@ def balka(pg: PageData) -> None:
     
     # Хеш-таблица с именами файлов и путями к ним
     sel_files = dict()
-
+    
+    # Список, в котором будут хранится все требуемые файлы в формате объектов ft.Text
     required_files = []
 
-    for i in ('ID', 'TO', 'FROM'):
+    # Заполняем вышеуказанный список
+    for item in required_files_of_data_types[data_type]:
         required_files.append(
             ft.Text(
-                value=f"Выберите файл {i}",
+                value=f"Выберите файл {item}",
                 size=16,
                 color=ft.colors.WHITE,
                 text_align=ft.TextAlign.CENTER,
@@ -157,8 +177,9 @@ def balka(pg: PageData) -> None:
             )
         )
 
+    # Содержит тип файла который должен быть выбран следующим, отображается на экране
     txt_required_file = ft.Container(required_files[0])
-    
+
     # Колонка с именами выбранных файлов
     sel_files_names = ft.Card(
         color=ft.colors.INDIGO_500,
@@ -193,8 +214,8 @@ def balka(pg: PageData) -> None:
     btn_calculate.disabled = True
 
     # Присваиваем каждой кнопке функцию, которая будет выполняться при нажатии
-    btn_pick_files.on_click = lambda _: file_picker.pick_files(allow_multiple=True)
-    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plot_balka', page=pg.page, args=sel_files)
+    btn_pick_files.on_click = lambda _: file_picker.pick_files()
+    btn_calculate.on_click = lambda _: pg.navigator.navigate('/plots_page', page=pg.page, args={'files': sel_files, 'data_type': data_type})
     btn_clear_files.on_click = clear_files
 
     # Объединяем в один объект колонку с именами выбранных файлов и кнопку "очистить список"

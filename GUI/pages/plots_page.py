@@ -1,30 +1,63 @@
 import flet as ft # Фреймворк для создания графического приложения
 import matplotlib # Для визуализации данных с помощью графиков 
 import time # Для работы со временем
-import sys # Для корректной работы иморта файлов
-import warnings
+import warnings # Чтобы убрать ненужные предупреждения в консоли
 from flet_navigator import * # Дополнение для более удобной навигации между страницами
 from flet.matplotlib_chart import MatplotlibChart # Для интеграции графиков в приложение
-from scripts.Kran15_rez import get_data_kran_15_rez
-from scripts.forecast import evaluate_arima_model
+from scripts.Kran15_state import get_data_kran_15_state # Функция чтения для файлов State
+from scripts.Kran15_rez import get_data_kran_15_rez  # Функция чтения для файлов Rez
+from scripts.Balka import get_data_balka  # Функция чтения для файлов Балки
+from scripts.Scaner import get_data_scaner  # Функция чтения для файлов Сканера
 matplotlib.use("svg") # Для корректного отображения графиков
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore') # Игнорируем ненужные предупреждения
 
-@route('/plot_kran_17_rez')
-def plot_kran_17_rez(pg: PageData) -> None:
+@route('/plots_page')
+def plots_page(pg: PageData) -> None:
     
     # Хеш-таблица с файлами, которые выбрал пользователь на предыдущей странице
-    sel_files = pg.arguments
-    
-    # Создадим отдельные списки для имен файлов и путей к ним
-    pathes = list(sel_files.values())
-    names = list(sel_files.keys())
+    sel_files = pg.arguments['files']
+    data_type = pg.arguments['data_type']
 
-    # Если длина хеш-таблицы 1, значит был передан только 1 файл, поэтому списки превращаются в строки
-    if len(sel_files) == 1:
-        pathes = pathes[0]
-        names = names[0]
+    # Список с путями выбранных файлов
+    pathes = list(sel_files.values())
     
+    # Хеш-таблица с типами объектов и функциями чтения их файлов
+    read_funcs = {
+        'Кран Rez': get_data_kran_15_rez,
+        'Кран State': get_data_kran_15_state,
+        'Балка': get_data_balka,
+        'Сканер': get_data_scaner
+    }
+
+    # Хеш-таблица с типами колонок и путями к соответствующим файлам
+    all_pathes = {
+        'Статус': None,
+        'ID': None,
+        'Откуда': None,
+        'Куда': None,
+        'Результат': None,
+    }
+
+    # Заполняем all_pathes согласно выбранному типу данных
+
+    if data_type == 'Кран State':
+        
+        all_pathes['Статус'] = [pathes[i] for i in range(len(pathes)) if i % 4 == 0]
+        all_pathes['ID'] = [pathes[i] for i in range(len(pathes)) if i % 4 == 1]
+        all_pathes['Куда'] = [pathes[i] for i in range(len(pathes)) if i % 4 == 2]
+        all_pathes['Откуда'] = [pathes[i] for i in range(len(pathes)) if i % 4 == 3]
+
+    elif data_type == 'Балка':
+        
+        all_pathes['ID'] = [pathes[i] for i in range(len(pathes)) if i % 3 == 0]
+        all_pathes['Куда'] = [pathes[i] for i in range(len(pathes)) if i % 3 == 1]
+        all_pathes['Откуда'] = [pathes[i] for i in range(len(pathes)) if i % 3 == 2]
+
+    elif data_type == 'Сканер':
+
+        all_pathes['ID'] = [pathes[i] for i in range(len(pathes)) if i % 2 == 0]
+        all_pathes['Куда'] = [pathes[i] for i in range(len(pathes)) if i % 2 == 1]
+
     # Функция сохранения текущего графика в формате 'выбранная папка'/'название графика'.png
     def save(e: ft.FilePickerResultEvent) -> None:
         try:
@@ -59,7 +92,8 @@ def plot_kran_17_rez(pg: PageData) -> None:
         cur_plot.update()
         cur_plot_title.update()
         btn_save.update()
-        
+    
+    # Переход на главную страницу
     def go_home(e) -> None:
         try:
             plot_figs.clear()
@@ -73,42 +107,41 @@ def plot_kran_17_rez(pg: PageData) -> None:
             time.sleep(0.01)
             pg.navigator.navigate('/', page=pg.page)
 
-    def go_forecast(e) -> None:
-        plot_figs.clear()
-        plot_names.clear()
-        cur_plot.content = None
-        cur_plot_title.value = None
+    # Если выбран автоматический подбор параметров модели, отключаем поля пользовательского выбора и наоборот
+    def arima_params_switch(e):
+        q_choice.disabled = not(q_choice.disabled)
+        p_choice.disabled = not(p_choice.disabled)
+        d_choice.disabled = not(d_choice.disabled)
         pg.page.update()
-        time.sleep(0.01)
-        args = {
-            'path': pathes,
-            'days': int(slider.value),
-            'param': dd.value,
-            'source': 'kran_15_rez',
-            'order': None
-        }
-        pg.navigator.navigate('/forecast', page=pg.page, args=args)
 
-    def go_custom_forecast(e) -> None:
-        plot_figs.clear()
-        plot_names.clear()
-        cur_plot.content = None
-        cur_plot_title.value = None
-        pg.page.update()
-        time.sleep(0.01)
-        args = {
-            'path': pathes,
-            'days': int(slider.value),
-            'param': dd.value,
-            'source': 'kran_15_rez',
-            'order': (
+    # Переход на страницу с прогнозом с выбранными аргументами
+    def go_forecast(e) -> None:
+        
+        order = None
+        path = None
+        
+        if not(q_choice.disabled):
+            order = (
                 int(p_choice.value),
                 int(d_choice.value),
                 int(q_choice.value),
             )
+        
+        if data_type == 'Кран Rez':
+            path = pathes
+        else:
+            path = all_pathes[value_selection.value]
+        
+        args = {
+            'path': path,
+            'days': int(slider.value),
+            'param': value_selection.value,
+            'source': data_type,
+            'order': order
         }
-        pg.navigator.navigate('/forecast', page=pg.page, args=args)
+        pg.navigator.navigate('/forecast_page', page=pg.page, args=args)
 
+    # Подтверждения выбора параметра p
     def p_submit(e) -> None:
         try:
             if int(p_choice.value) not in range(0, 5 + 1):
@@ -117,6 +150,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
             p_choice.value = ''
         p_choice.update()
 
+    # Подтверждения выбора параметра d
     def d_submit(e) -> None:
         try:
             if int(d_choice.value) not in range(0, 2 + 1):
@@ -125,6 +159,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
             d_choice.value = ''
         d_choice.update()
 
+    # Подтверждения выбора параметра q
     def q_submit(e) -> None:
         try:
             if int(q_choice.value) not in range(0, 5 + 1):
@@ -134,7 +169,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
         q_choice.update()
 
     # Настройки окна программы
-    pg.page.title = 'Кран 17 Rez (графики)'
+    pg.page.title = data_type
     pg.page.window.width = 1000
     pg.page.window.height = 700
     pg.page.window.resizable = False
@@ -151,6 +186,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
         text_align=ft.TextAlign.CENTER
     )
 
+    # Кнопка сохранения графика
     btn_save = ft.IconButton(
         icon=ft.icons.SAVE,
         icon_color=ft.colors.WHITE,
@@ -158,6 +194,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
         on_click= lambda _: file_picker.get_directory_path()
     )
 
+    # Кнопка домой
     btn_go_home = ft.IconButton(
         icon=ft.icons.HOME,
         icon_color=ft.colors.WHITE,
@@ -187,6 +224,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
         icon_color=ft.colors.WHITE,
         tooltip='Следующий график',
     )
+
     btn_prev_plot = ft.IconButton(
         icon=ft.icons.ARROW_LEFT,
         icon_size=40,
@@ -199,13 +237,14 @@ def plot_kran_17_rez(pg: PageData) -> None:
     btn_next_plot.on_click = next_plot
     btn_prev_plot.on_click = prev_plot
     
+    # Колесико загрузки
     progress_ring = ft.ProgressRing(width=52, height=52, stroke_width=2, color=ft.colors.WHITE)
     
     # Объект, поверх которого будут выводиться текущий график
     cur_plot = ft.Card(
         content=ft.Container(
-                content=progress_ring,
-                alignment=ft.alignment.center,  
+            content=progress_ring,
+            alignment=ft.alignment.center,  
         ),
         width=800,
         height=525,
@@ -214,24 +253,24 @@ def plot_kran_17_rez(pg: PageData) -> None:
     )
 
     # Добавляем все созданные объекты на страницу
-    all_content = ft.Column(
-        [
-            ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
-        ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
+    pg.page.add(
+        ft.Column(
+            [
+                ft.Row([btn_prev_plot, cur_plot, btn_next_plot], spacing=10, alignment=ft.MainAxisAlignment.CENTER)
+            ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
     )
-    
-    pg.page.add(all_content)
 
     # Добавляем небольшую задержку перед отображением графиков, для корректной работы перехода между страницами
     time.sleep(0.01)
     
     try:
         # Передаем путь к выбранному файлу, чтобы получить словарь с графиками и их заголовками
-        data = get_data_kran_15_rez(paths=pathes)
+        
+        data = read_funcs[data_type](paths=pathes)
         dict_plots = data['plots']
         values = data['values']
         
-
         btn_forecast = ft.ElevatedButton(
             content=ft.Text(
                 value='Спрогнозировать',
@@ -246,21 +285,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
             on_click=go_forecast
         )
 
-        btn_custom_forecast = ft.ElevatedButton(
-            content=ft.Text(
-                value='Прогноз с выбранными параметрами',
-                size=25,
-                color=ft.colors.WHITE,
-                weight=ft.FontWeight.W_700,
-                text_align=ft.TextAlign.CENTER
-            ),
-            width=400,
-            height=100,
-            bgcolor=ft.colors.INDIGO_500,
-            on_click=go_custom_forecast
-        )
-
-        dd = ft.Dropdown(
+        value_selection = ft.Dropdown(
             value=str(values[0]),
             width=100, 
             options=[ft.dropdown.Option(str(value)) for value in values],
@@ -277,9 +302,35 @@ def plot_kran_17_rez(pg: PageData) -> None:
             label="{value} Дней",
         )
         
+        p_choice = ft.TextField(
+            label='p(0;5)',
+            width=100,
+            on_submit=p_submit,
+            disabled=True
+        )
+
+        d_choice = ft.TextField(
+            label='d(0;2)',
+            width=100,
+            on_submit=d_submit,
+            disabled=True
+        )
+
+        q_choice = ft.TextField(
+            label='q(0;5)',
+            width=100,
+            on_submit=q_submit,
+            disabled=True
+        )
+        
+        check_box = ft.Checkbox(
+            label='Автоматический подбор параметров ARIMA',
+            on_change=arima_params_switch,
+            value=True
+        )
+
         selection_card = ft.Column(
             controls=[
-                ft.Container(height=50),
                 ft.Text(
                     value=f"Выберите прогнозируемый параметр:",
                     size=25,
@@ -288,8 +339,7 @@ def plot_kran_17_rez(pg: PageData) -> None:
                     width=700,
                     italic=True
                 ),
-                dd,
-                ft.Container(height=50),
+                value_selection,
                 ft.Text(
                     value=f"Выберите период прогнозирования:",
                     size=25,
@@ -299,41 +349,9 @@ def plot_kran_17_rez(pg: PageData) -> None:
                     italic=True
                 ),
                 slider,
-                btn_forecast
-            ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
-        )
-        
-        p_choice = ft.TextField(
-            label='p(0;5)',
-            width=100,
-            on_submit=p_submit
-        )
-
-        d_choice = ft.TextField(
-            label='d(0;2)',
-            width=100,
-            on_submit=d_submit
-        )
-
-        q_choice = ft.TextField(
-            label='q(0;5)',
-            width=100,
-            on_submit=q_submit
-        )
-        
-        arima_params_card = ft.Column(
-            controls=[
-                ft.Container(height=50),
-                ft.Text(
-                    value=f"Выберите параметры ARIMA",
-                    size=25,
-                    color=ft.colors.WHITE,
-                    text_align=ft.TextAlign.CENTER,
-                    width=700,
-                    italic=True
-                ),
+                ft.Row([check_box], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Row([p_choice, d_choice, q_choice], alignment=ft.MainAxisAlignment.CENTER),
-                btn_custom_forecast
+                btn_forecast
             ], spacing=20, horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
 
@@ -349,15 +367,13 @@ def plot_kran_17_rez(pg: PageData) -> None:
         plot_figs.append(selection_card)
         plot_names.append('')
 
-        plot_figs.append(arima_params_card)
-        plot_names.append('')
-
         # Выводим текущий график и его заголовок на экран
         cur_plot.content = plot_figs[0]
         cur_plot_title.value = plot_names[0]
         btn_go_home.disabled = False
         pg.page.update()
-    except Exception as e:
+
+    except:
         cur_plot.content = ft.Text(
             value=f'Ошибка при обработке файла!',
             color=ft.colors.RED,

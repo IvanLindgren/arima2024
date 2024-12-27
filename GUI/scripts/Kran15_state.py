@@ -59,7 +59,7 @@ def count_records_by_day_auto(df: pd.DataFrame) -> pd.DataFrame:
     return counts_df
 
 
-def plots_kran_15_state(paths: Union[str, List[str]]):
+def get_data_kran_15_state(paths: Union[str, List[str]]):
     # Построение общего графика
     def create_general_graf(dict_of_frames: dict, date_format: str = "%d-%m",
                             interval: int = 1) -> Figure:
